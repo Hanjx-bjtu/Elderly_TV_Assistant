@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">长辈电视助手</string>
+    <string name="action_settings">设置</string>
+    <string name="action_about">关于</string>
+    <string name="channel_current">当前频道</string>
+    <string name="voice_hint">请说出频道名称</string>
+    <string name="timer_title">定时关闭</string>
+    <string name="exit_confirm">确定要退出长辈电视助手吗？</string>
+    <string name="exit_title">退出</string>
+    <string name="network_error">请检查网络连接</string>
+    <string name="play_error">播放失败，请稍后重试</string>
+    <string name="no_channel">暂无频道</string>
+    <string name="no_favorite">暂无收藏</string>
+    <string name="add_favorite">已添加收藏</string>
+    <string name="remove_favorite">已取消收藏</string>
+    <string name="timer_set">已设置%1$d分钟后自动关闭</string>
+    <string name="timer_cancel">已取消定时关闭</string>
+    <string name="tts_prefix">正在播放</string>
+    <string name="permission_audio_denied">需要录音权限才能使用语音功能</string>
+    <string name="channel_not_found">没有找到该频道</string>
+    <string name="guide_skip">跳过</string>
+    <string name="guide_next">下一步</string>
+    <string name="guide_start">开始使用</string>
+</resources>

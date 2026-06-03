@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 网络权限 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- 录音权限（语音识别） -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- 震动权限 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- 前台服务权限 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <!-- 通知权限（Android 13+） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:name=".ElderlyTVApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+
+        <!-- 启动页 -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 引导页 -->
+        <activity
+            android:name=".activity.GuideActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
+
+        <!-- 主界面 -->
+        <activity
+            android:name=".activity.MainActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/AppTheme" />
+
+        <!-- 设置页 -->
+        <activity
+            android:name=".activity.SettingsActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
+
+        <!-- 关于页 -->
+        <activity
+            android:name=".AboutActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
+
+        <!-- 定时关闭广播接收器 -->
+        <receiver
+            android:name=".receiver.TimerReceiver"
+            android:exported="false" />
+
+    </application>
+
+</manifest>

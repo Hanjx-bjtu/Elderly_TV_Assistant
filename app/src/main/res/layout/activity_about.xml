@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/colorBackground"
+    android:padding="32dp"
+    android:gravity="center_horizontal">
+
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_tv"
+        android:contentDescription="应用图标"
+        android:layout_marginTop="32dp" />
+
+    <TextView
+        android:id="@+id/tv_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="版本 1.0"
+        android:textColor="@color/colorTextSecondary"
+        android:textSize="18sp"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="长辈电视助手"
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="32dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="专为老年用户设计的电视直播观看助手。\n\n核心特点：\n· 大字体、高对比度界面\n· 左右点击快速换台\n· 语音识别换台\n· 定时自动关闭\n· 语音播报频道名称"
+        android:textColor="@color/colorTextSecondary"
+        android:textSize="20sp"
+        android:lineSpacingMultiplier="1.5"
+        android:layout_marginTop="24dp" />
+
+</LinearLayout>

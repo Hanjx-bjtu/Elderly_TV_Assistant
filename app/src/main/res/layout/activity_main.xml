@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.elderly.tvassistant.widget.GestureRelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/gesture_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground">
+
+    <!-- 视频播放容器 -->
+    <FrameLayout
+        android:id="@+id/video_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorVideoBackground" />
+
+    <!-- 半透明遮罩底部控制栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:background="@drawable/bg_bottom_bar"
+        android:padding="16dp">
+
+        <!-- 当前频道名称 -->
+        <TextView
+            android:id="@+id/tv_current_channel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/colorChannelName"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:text="CCTV-1 综合"
+            android:shadowColor="#000000"
+            android:shadowRadius="4"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 按钮栏 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <!-- 语音按钮 -->
+            <ImageButton
+                android:id="@+id/btn_voice"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@drawable/ic_mic"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="语音换台"
+                android:scaleType="centerInside"
+                android:padding="12dp" />
+
+            <Space
+                android:layout_width="24dp"
+                android:layout_height="0dp" />
+
+            <!-- 定时按钮 -->
+            <ImageButton
+                android:id="@+id/btn_timer"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@drawable/ic_timer"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="定时关闭"
+                android:scaleType="centerInside"
+                android:padding="12dp" />
+
+            <Space
+                android:layout_width="24dp"
+                android:layout_height="0dp" />
+
+            <!-- 收藏按钮 -->
+            <ImageButton
+                android:id="@+id/btn_favorite"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@drawable/ic_star"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="收藏"
+                android:scaleType="centerInside"
+                android:padding="12dp" />
+
+            <Space
+                android:layout_width="24dp"
+                android:layout_height="0dp" />
+
+            <!-- 菜单按钮 -->
+            <ImageButton
+                android:id="@+id/btn_menu"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@drawable/ic_menu"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="频道列表"
+                android:scaleType="centerInside"
+                android:padding="12dp" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</com.elderly.tvassistant.widget.GestureRelativeLayout>
