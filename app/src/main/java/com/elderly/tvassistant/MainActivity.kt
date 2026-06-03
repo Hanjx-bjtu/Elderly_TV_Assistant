@@ -383,6 +383,7 @@
 package com.elderly.tvassistant.activity
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -731,7 +732,7 @@ class MainActivity : AppCompatActivity() {
     /**
      * 设置定时关闭
      */
-    @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
+    @SuppressLint("ScheduleExactAlarm")
     private fun setTimer(minutes: Int) {
         timerManager.setTimer(minutes)
         timerBtn.isSelected = true
