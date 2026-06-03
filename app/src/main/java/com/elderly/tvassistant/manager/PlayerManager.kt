@@ -77,6 +77,9 @@ class PlayerManager(
                 domStorageEnabled = true
                 loadWithOverviewMode = true
                 useWideViewPort = true
+
+                userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
                 mediaPlaybackRequiresUserGesture = false
                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 cacheMode = WebSettings.LOAD_DEFAULT
@@ -104,6 +107,10 @@ class PlayerManager(
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
+                    
+                    // 注入JavaScript来隐藏不必要的页面元素，只保留视频播放器
+                    view?.evaluateJavascript(getHideElementsScript(), null)
+                    
                     // 页面加载完成后尝试自动播放视频
                     view?.evaluateJavascript(
                         "try { var videos = document.querySelectorAll('video'); " +
@@ -240,6 +247,70 @@ class PlayerManager(
      * 获取当前播放的URL
      */
     fun getCurrentUrl(): String = currentUrl
+    
+    /**
+     * 生成隐藏页面元素的JavaScript代码
+     * 只保留视频播放器部分
+     */
+    private fun getHideElementsScript(): String {
+        return """
+            (function() {
+                // 隐藏所有body子元素
+                var bodyChildren = document.body.children;
+                for(var i = 0; i < bodyChildren.length; i++) {
+                    var child = bodyChildren[i];
+                    // 保留视频播放器元素，隐藏其他元素
+                    if(child.querySelector && !child.querySelector('#player')) {
+                        child.style.display = 'none';
+                    }
+                }
+                
+                // 如果找不到特定的视频播放器，尝试通用方法隐藏常见元素
+                if(!document.querySelector('#player')) {
+                    // 隐藏头部导航
+                    var headers = document.querySelectorAll('header, .header, #header, .bg_top_h_tile, #page_head_lt31');
+                    for(var i = 0; i < headers.length; i++) {
+                        headers[i].style.display = 'none';
+                    }
+                    
+                    // 隐藏底部导航和无关内容
+                    var footers = document.querySelectorAll('footer, .footer, #footer, .jiemuguanwang18950_zhibo_ind01, .page_body');
+                    for(var i = 0; i < footers.length; i++) {
+                        footers[i].style.display = 'none';
+                    }
+                    
+                    // 隐藏广告、分享按钮等
+                    var elementsToHide = document.querySelectorAll('.share, .video_btn_l, .video_btnBar, .vspace, .playingVideo, .video_left, .video_flash');
+                    for(var i = 0; i < elementsToHide.length; i++) {
+                        elementsToHide[i].style.display = 'none';
+                    }
+                    
+                    // 只保留视频元素
+                    var videoElement = document.querySelector('video');
+                    if(videoElement) {
+                        videoElement.style.position = 'fixed';
+                        videoElement.style.top = '0';
+                        videoElement.style.left = '0';
+                        videoElement.style.width = '100%';
+                        videoElement.style.height = '100%';
+                        videoElement.style.zIndex = '9999';
+                        
+                        // 移除视频元素的所有父容器限制
+                        var parent = videoElement.parentElement;
+                        while(parent && parent !== document.body) {
+                            parent.style.overflow = 'visible';
+                            parent = parent.parentElement;
+                        }
+                    }
+                }
+                
+                // 重新调整页面布局，确保视频可见
+                document.body.style.margin = '0';
+                document.body.style.padding = '0';
+                document.body.style.overflow = 'hidden';
+            })();
+        """.trimIndent()
+    }
 
     companion object {
         private const val TAG = "PlayerManager"

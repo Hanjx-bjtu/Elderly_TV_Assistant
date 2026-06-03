@@ -4,7 +4,8 @@
     android:id="@+id/gesture_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorBackground">
+    android:background="@color/colorBackground"
+    android:fitsSystemWindows="true">
 
     <!-- 视频播放容器 -->
     <FrameLayout
@@ -78,7 +79,7 @@
                 android:id="@+id/btn_favorite"
                 android:layout_width="72dp"
                 android:layout_height="72dp"
-                android:src="@drawable/ic_star"
+                android:src="@drawable/star_selector"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="收藏"
                 android:scaleType="centerInside"

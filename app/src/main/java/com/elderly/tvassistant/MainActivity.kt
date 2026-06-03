@@ -394,6 +394,7 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -715,7 +716,7 @@ class MainActivity : AppCompatActivity() {
         val minutes = arrayOf("15分钟", "30分钟", "60分钟", "90分钟", "取消定时")
         AlertDialog.Builder(this)
             .setTitle("定时关闭")
-            .setItems(minutes) { _, which ->
+            .setItems(minutes)  { _, which ->
                 when (which) {
                     0 -> setTimer(15)
                     1 -> setTimer(30)
@@ -730,6 +731,7 @@ class MainActivity : AppCompatActivity() {
     /**
      * 设置定时关闭
      */
+    @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     private fun setTimer(minutes: Int) {
         timerManager.setTimer(minutes)
         timerBtn.isSelected = true
@@ -751,7 +753,7 @@ class MainActivity : AppCompatActivity() {
     private fun toggleFavorite() {
         currentChannel?.let { channel ->
             channelViewModel.toggleFavorite(channel.id)
-            val isFav = favoriteBtn.isSelected
+            val isFav = !favoriteBtn.isSelected
             showToast(if (isFav) "已添加收藏" else "已取消收藏")
         }
     }
