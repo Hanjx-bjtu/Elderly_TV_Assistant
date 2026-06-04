@@ -1,6 +1,7 @@
 package com.elderly.tvassistant.manager
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -30,6 +31,7 @@ class TimerManager(private val context: Context) {
      * 设置定时关闭
      * @param minutes 定时分钟数
      */
+    @SuppressLint("ScheduleExactAlarm")
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     fun setTimer(minutes: Int) {
         // 先取消已有定时
@@ -44,6 +46,13 @@ class TimerManager(private val context: Context) {
         pendingIntent = createPendingIntent(intent)
 
         try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (!alarmManager.canScheduleExactAlarms()) {
+                    Log.e(TAG, "无法设置精确闹钟，缺少SCHEDULE_EXACT_ALARM权限")
+                    throw SecurityException("缺少SCHEDULE_EXACT_ALARM权限")
+                }
+            }
+            
             pendingIntent?.let {
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
@@ -51,11 +60,20 @@ class TimerManager(private val context: Context) {
                     it
                 )
             }
-            Log.d(TAG, "定时关闭已设置: $minutes 分钟后")
+            Log.d(TAG, "定时关闭已设置: $minutes 分钟后，触发时间: ${java.util.Date(triggerTime)}")
         } catch (e: SecurityException) {
             Log.e(TAG, "设置定时失败，可能需要权限: ${e.message}")
             // 降级使用set()方法
-            pendingIntent?.let { alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, it) }
+            try {
+                pendingIntent?.let { alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, it) }
+                Log.d(TAG, "使用降级方式设置定时: $minutes 分钟后")
+            } catch (e2: Exception) {
+                Log.e(TAG, "降级方式也失败: ${e2.message}")
+                cancelTimer()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "设置定时失败: ${e.message}", e)
+            cancelTimer()
         }
     }
 

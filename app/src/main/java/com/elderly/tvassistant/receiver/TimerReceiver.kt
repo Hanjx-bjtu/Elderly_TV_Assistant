@@ -11,7 +11,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 //import com.elderly.tvassistant.MainActivity
 //import com.elderly.tvassistant.R
-import com.elderly.tvassistant.activity.MainActivity
+import com.elderly.tvassistant.MainActivity
 import kotlin.jvm.java
 
 /**
@@ -30,6 +30,8 @@ class TimerReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         Log.d(TAG, "收到定时关闭广播")
+        Log.d(TAG, "Intent action: ${intent.action}")
+        Log.d(TAG, "Intent extras: ${intent.extras}")
 
         val minutes = intent.getIntExtra("TIMER_MINUTES", 0)
         val message = if (minutes > 0) {
@@ -37,6 +39,8 @@ class TimerReceiver : BroadcastReceiver() {
         } else {
             "播放时间已到"
         }
+
+        Log.d(TAG, "定时消息: $message")
 
         // 发送通知
         sendNotification(context, message)
@@ -48,6 +52,7 @@ class TimerReceiver : BroadcastReceiver() {
                     Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("TIMER_OFF", true)
         }
+        Log.d(TAG, "启动关闭Activity")
         context.startActivity(closeIntent)
     }
 

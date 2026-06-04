@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
+import com.elderly.tvassistant.MainActivity
 import com.elderly.tvassistant.R
 import com.google.android.material.button.MaterialButton
 

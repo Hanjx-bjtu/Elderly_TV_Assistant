@@ -255,59 +255,44 @@ class PlayerManager(
     private fun getHideElementsScript(): String {
         return """
             (function() {
-                // 隐藏所有body子元素
-                var bodyChildren = document.body.children;
-                for(var i = 0; i < bodyChildren.length; i++) {
-                    var child = bodyChildren[i];
-                    // 保留视频播放器元素，隐藏其他元素
-                    if(child.querySelector && !child.querySelector('#player')) {
-                        child.style.display = 'none';
+                // 隐藏顶部导航和header元素
+                var headers = document.querySelectorAll('header, .header, #header, .bg_top_h_tile, #page_head_lt31');
+                for(var i = 0; i < headers.length; i++) {
+                    headers[i].style.display = 'none';
+                }
+                
+                // 提取视频播放器容器
+                var player = document.querySelector('#player');
+                if(player) {
+                    // 将播放器移动到body下，移除所有父容器限制
+                    document.body.appendChild(player);
+                    
+                    // 设置全屏样式
+                    player.style.position = 'fixed';
+                    player.style.top = '0';
+                    player.style.left = '0';
+                    player.style.width = '100%';
+                    player.style.height = '100%';
+                    player.style.zIndex = '9999';
+                    player.style.margin = '0';
+                    player.style.padding = '0';
+                    player.style.background = '#000';
+                }
+                
+                // 隐藏其他所有元素（除了播放器）
+                var allElements = document.body.children;
+                for(var i = 0; i < allElements.length; i++) {
+                    var elem = allElements[i];
+                    if(elem.id !== 'player' && elem.tagName !== 'SCRIPT') {
+                        elem.style.display = 'none';
                     }
                 }
                 
-                // 如果找不到特定的视频播放器，尝试通用方法隐藏常见元素
-                if(!document.querySelector('#player')) {
-                    // 隐藏头部导航
-                    var headers = document.querySelectorAll('header, .header, #header, .bg_top_h_tile, #page_head_lt31');
-                    for(var i = 0; i < headers.length; i++) {
-                        headers[i].style.display = 'none';
-                    }
-                    
-                    // 隐藏底部导航和无关内容
-                    var footers = document.querySelectorAll('footer, .footer, #footer, .jiemuguanwang18950_zhibo_ind01, .page_body');
-                    for(var i = 0; i < footers.length; i++) {
-                        footers[i].style.display = 'none';
-                    }
-                    
-                    // 隐藏广告、分享按钮等
-                    var elementsToHide = document.querySelectorAll('.share, .video_btn_l, .video_btnBar, .vspace, .playingVideo, .video_left, .video_flash');
-                    for(var i = 0; i < elementsToHide.length; i++) {
-                        elementsToHide[i].style.display = 'none';
-                    }
-                    
-                    // 只保留视频元素
-                    var videoElement = document.querySelector('video');
-                    if(videoElement) {
-                        videoElement.style.position = 'fixed';
-                        videoElement.style.top = '0';
-                        videoElement.style.left = '0';
-                        videoElement.style.width = '100%';
-                        videoElement.style.height = '100%';
-                        videoElement.style.zIndex = '9999';
-                        
-                        // 移除视频元素的所有父容器限制
-                        var parent = videoElement.parentElement;
-                        while(parent && parent !== document.body) {
-                            parent.style.overflow = 'visible';
-                            parent = parent.parentElement;
-                        }
-                    }
-                }
-                
-                // 重新调整页面布局，确保视频可见
+                // 重新调整页面布局
                 document.body.style.margin = '0';
                 document.body.style.padding = '0';
                 document.body.style.overflow = 'hidden';
+                document.body.style.background = '#000';
             })();
         """.trimIndent()
     }

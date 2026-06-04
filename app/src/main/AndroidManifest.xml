@@ -47,7 +47,7 @@
 
         <!-- 主界面 -->
         <activity
-            android:name=".activity.MainActivity"
+            android:name=".MainActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:theme="@style/AppTheme" />
@@ -67,7 +67,11 @@
         <!-- 定时关闭广播接收器 -->
         <receiver
             android:name=".receiver.TimerReceiver"
-            android:exported="false" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.elderly.tvassistant.TIMER_ACTION" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

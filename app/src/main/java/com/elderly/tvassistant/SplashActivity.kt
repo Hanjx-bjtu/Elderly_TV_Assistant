@@ -13,9 +13,7 @@ import com.elderly.tvassistant.utils.SharedPrefsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.elderly.tvassistant.R
 import com.elderly.tvassistant.activity.GuideActivity
-import com.elderly.tvassistant.activity.MainActivity
 import kotlin.jvm.java
 
 /**

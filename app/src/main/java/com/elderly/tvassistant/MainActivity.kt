@@ -1,391 +1,8 @@
-﻿//package com.elderly.tvassistant
-//
-//import android.Manifest
-//import android.content.Intent
-//import android.os.Bundle
-//import android.widget.FrameLayout
-//import android.widget.Toast
-//import androidx.activity.ComponentActivity
-//import androidx.activity.compose.setContent
-//import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
-//import androidx.activity.viewModels
-//import androidx.compose.foundation.background
-//import androidx.compose.foundation.layout.Arrangement
-//import androidx.compose.foundation.layout.Box
-//import androidx.compose.foundation.layout.Column
-//import androidx.compose.foundation.layout.Row
-//import androidx.compose.foundation.layout.Spacer
-//import androidx.compose.foundation.layout.fillMaxSize
-//import androidx.compose.foundation.layout.fillMaxWidth
-//import androidx.compose.foundation.layout.height
-//import androidx.compose.foundation.layout.padding
-//import androidx.compose.foundation.lazy.LazyColumn
-//import androidx.compose.foundation.lazy.itemsIndexed
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.Favorite
-//import androidx.compose.material.icons.filled.FavoriteBorder
-//import androidx.compose.material.icons.filled.Menu
-//import androidx.compose.material.icons.filled.Mic
-//import androidx.compose.material.icons.filled.Settings
-//import androidx.compose.material.icons.filled.Timer
-//import androidx.compose.material3.AlertDialog
-//import androidx.compose.material3.Icon
-//import androidx.compose.material3.IconButton
-//import androidx.compose.material3.MaterialTheme
-//import androidx.compose.material3.ModalDrawerSheet
-//import androidx.compose.material3.ModalNavigationDrawer
-//import androidx.compose.material3.NavigationDrawerItem
-//import androidx.compose.material3.Scaffold
-//import androidx.compose.material3.Text
-//import androidx.compose.material3.TextButton
-//import androidx.compose.material3.TopAppBar
-//import androidx.compose.runtime.Composable
-//import androidx.compose.runtime.DisposableEffect
-//import androidx.compose.runtime.LaunchedEffect
-//import androidx.compose.runtime.getValue
-//import androidx.compose.runtime.mutableStateOf
-//import androidx.compose.runtime.remember
-//import androidx.compose.runtime.rememberCoroutineScope
-//import androidx.compose.runtime.rememberSaveable
-//import androidx.compose.runtime.setValue
-//import androidx.compose.runtime.livedata.observeAsState
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.platform.LocalContext
-//import androidx.compose.ui.unit.dp
-//import androidx.compose.ui.viewinterop.AndroidView
-//import androidx.compose.material3.DrawerValue
-//import androidx.compose.material3.rememberDrawerState
-//import com.elderly.tvassistant.manager.PlayerManager
-//import com.elderly.tvassistant.manager.TTSManager
-//import com.elderly.tvassistant.manager.TimerManager
-//import com.elderly.tvassistant.manager.VoiceManager
-//import com.elderly.tvassistant.ui.theme.Elderly_tvassistantTheme
-//import com.elderly.tvassistant.utils.PermissionHelper
-//import com.elderly.tvassistant.utils.SharedPrefsHelper
-//import com.elderly.tvassistant.viewmodel.ChannelViewModel
-//import com.elderly.tvassistant.viewmodel.VoiceViewModel
-//import com.elderly.tvassistant.widget.GestureRelativeLayout
-//import kotlinx.coroutines.launch
-//
-//class MainActivity : ComponentActivity() {
-//
-//    private lateinit var prefsHelper: SharedPrefsHelper
-//    private lateinit var ttsManager: TTSManager
-//    private lateinit var voiceManager: VoiceManager
-//    private lateinit var timerManager: TimerManager
-//
-//    private val channelViewModel: ChannelViewModel by viewModels()
-//    private val voiceViewModel: VoiceViewModel by viewModels()
-//
-//    private val audioPermissionLauncher = registerForActivityResult(RequestPermission()) { granted ->
-//        if (granted) {
-//            startVoiceRecognition()
-//        } else {
-//            Toast.makeText(this, "需要录音权限才能使用语音功能", Toast.LENGTH_SHORT).show()
-//        }
-//    }
-//
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        prefsHelper = SharedPrefsHelper(this)
-//        ttsManager = TTSManager(this).apply { init() }
-//        timerManager = TimerManager(this)
-//        voiceManager = VoiceManager(this, object : VoiceManager.VoiceCallback {
-//            override fun onListeningStart() {
-//                runOnUiThread {
-//                    Toast.makeText(this@MainActivity, "开始语音识别", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//            override fun onResult(channelName: String?) {
-//                voiceViewModel.onVoiceResult(channelName)
-//            }
-//
-//            override fun onError(error: String) {
-//                voiceViewModel.onVoiceError(error)
-//            }
-//        }).also { it.init() }
-//
-//        if (intent?.getBooleanExtra("TIMER_OFF", false) == true) {
-//            finish()
-//            return
-//        }
-//
-//        setContent {
-//            Elderly_tvassistantTheme {
-//                MainScreen(
-//                    channelViewModel = channelViewModel,
-//                    voiceViewModel = voiceViewModel,
-//                    prefsHelper = prefsHelper,
-//                    voiceManager = voiceManager,
-//                    ttsManager = ttsManager,
-//                    timerManager = timerManager,
-//                    onRequestAudioPermission = {
-//                        if (PermissionHelper.hasRecordAudioPermission(this)) {
-//                            startVoiceRecognition()
-//                        } else {
-//                            audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-//                        }
-//                    }
-//                )
-//            }
-//        }
-//
-//        voiceViewModel.voiceError.observe(this) { error ->
-//            error?.let {
-//                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
-//                voiceViewModel.clearError()
-//            }
-//        }
-//    }
-//
-//    override fun onDestroy() {
-//        super.onDestroy()
-//        voiceManager.destroy()
-//        ttsManager.shutdown()
-//    }
-//
-//    private fun startVoiceRecognition() {
-//        if (!PermissionHelper.hasRecordAudioPermission(this)) {
-//            audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-//            return
-//        }
-//        voiceManager.startListening()
-//    }
-//}
-//
-//@Composable
-//private fun MainScreen(
-//    channelViewModel: ChannelViewModel,
-//    voiceViewModel: VoiceViewModel,
-//    prefsHelper: SharedPrefsHelper,
-//    voiceManager: VoiceManager,
-//    ttsManager: TTSManager,
-//    timerManager: TimerManager,
-//    onRequestAudioPermission: () -> Unit
-//) {
-//    val context = LocalContext.current
-//    val channelList by channelViewModel.allChannels.observeAsState(emptyList())
-//    val isFavorite by channelViewModel.isFavorite.observeAsState(false)
-//    val voiceResult by voiceViewModel.voiceResult.observeAsState()
-//    val drawerState = rememberDrawerState(DrawerValue.Closed)
-//    val scope = rememberCoroutineScope()
-//    var currentChannelIndex by rememberSaveable { mutableStateOf(0) }
-//    var showTimerDialog by remember { mutableStateOf(false) }
-//    var playerManager by remember { mutableStateOf<PlayerManager?>(null) }
-//
-//    val currentChannel = channelList.getOrNull(currentChannelIndex)
-//
-//    LaunchedEffect(channelList) {
-//        if (channelList.isNotEmpty()) {
-//            currentChannelIndex = channelList.indexOfFirst { it.id == prefsHelper.getDefaultChannelId() }
-//                .takeIf { it >= 0 } ?: 0
-//            voiceManager.updateKeywords(channelList)
-//        }
-//    }
-//
-//    LaunchedEffect(currentChannel?.id) {
-//        currentChannel?.let { channel ->
-//            playerManager?.play(channel.url)
-//            channelViewModel.checkFavorite(channel.id)
-//            if (prefsHelper.isTTSEnabled()) {
-//                ttsManager.speakChannel(channel.displayName ?: channel.name)
-//            }
-//        }
-//    }
-//
-//    LaunchedEffect(voiceResult, channelList) {
-//        voiceResult?.let { recognizedName ->
-//            val targetChannel = channelList.find { channel ->
-//                channel.name.contains(recognizedName, ignoreCase = true) || channel.keywords.any {
-//                    it.contains(recognizedName, ignoreCase = true)
-//                }
-//            }
-//            if (targetChannel != null) {
-//                currentChannelIndex = channelList.indexOf(targetChannel)
-//            } else {
-//                ttsManager.speak("没有找到该频道，请重试")
-//            }
-//            voiceViewModel.clearResult()
-//        }
-//    }
-//
-//    DisposableEffect(playerManager) {
-//        onDispose {
-//            playerManager?.release()
-//        }
-//    }
-//
-//    ModalNavigationDrawer(
-//        drawerState = drawerState,
-//        drawerContent = {
-//            ModalDrawerSheet {
-//                Column(modifier = Modifier.padding(16.dp)) {
-//                    Text(text = "频道列表", style = MaterialTheme.typography.titleLarge)
-//                    Spacer(modifier = Modifier.height(12.dp))
-//                    LazyColumn {
-//                        itemsIndexed(channelList) { index, channel ->
-//                            NavigationDrawerItem(
-//                                label = { Text(channel.displayName ?: channel.name) },
-//                                selected = index == currentChannelIndex,
-//                                onClick = {
-//                                    currentChannelIndex = index
-//                                    scope.launch { drawerState.close() }
-//                                },
-//                                modifier = Modifier.padding(vertical = 4.dp)
-//                            )
-//                        }
-//                    }
-//                    Spacer(modifier = Modifier.height(16.dp))
-//                    TextButton(onClick = {
-//                        context.startActivity(Intent(context, SettingsActivity::class.java))
-//                    }) {
-//                        Text("设置")
-//                    }
-//                }
-//            }
-//        }
-//    ) {
-//        Scaffold(
-//            topBar = {
-//                TopAppBar(
-//                    title = { Text("长辈电视助手") },
-//                    navigationIcon = {
-//                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-//                            Icon(imageVector = Icons.Default.Menu, contentDescription = "打开侧边栏")
-//                        }
-//                    },
-//                    actions = {
-//                        IconButton(onClick = {
-//                            context.startActivity(Intent(context, SettingsActivity::class.java))
-//                        }) {
-//                            Icon(imageVector = Icons.Default.Settings, contentDescription = "设置")
-//                        }
-//                    }
-//                )
-//            }
-//        ) { innerPadding ->
-//            Box(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(innerPadding)
-//                    .background(MaterialTheme.colorScheme.background)
-//            ) {
-//                AndroidView(
-//                    factory = { ctx ->
-//                        GestureRelativeLayout(ctx).apply {
-//                            layoutParams = FrameLayout.LayoutParams(
-//                                FrameLayout.LayoutParams.MATCH_PARENT,
-//                                FrameLayout.LayoutParams.MATCH_PARENT
-//                            )
-//                            val videoContainer = FrameLayout(ctx).apply {
-//                                layoutParams = FrameLayout.LayoutParams(
-//                                    FrameLayout.LayoutParams.MATCH_PARENT,
-//                                    FrameLayout.LayoutParams.MATCH_PARENT
-//                                )
-//                            }
-//                            addView(videoContainer)
-//                            if (playerManager == null) {
-//                                playerManager = PlayerManager(ctx, videoContainer).apply {
-//                                    init()
-//                                }
-//                            }
-//                            setOnRegionClickListener(object : GestureRelativeLayout.OnRegionClickListener {
-//                                override fun onLeftClick() {
-//                                    if (channelList.isNotEmpty()) {
-//                                        currentChannelIndex = (currentChannelIndex - 1 + channelList.size) % channelList.size
-//                                    }
-//                                }
-//
-//                                override fun onRightClick() {
-//                                    if (channelList.isNotEmpty()) {
-//                                        currentChannelIndex = (currentChannelIndex + 1) % channelList.size
-//                                    }
-//                                }
-//
-//                                override fun onMiddleClick() {
-//                                    showTimerDialog = !showTimerDialog
-//                                }
-//                            })
-//                        }
-//                    },
-//                    modifier = Modifier.fillMaxSize()
-//                )
-//
-//                Column(
-//                    modifier = Modifier
-//                        .align(Alignment.TopCenter)
-//                        .padding(16.dp)
-//                ) {
-//                    Text(text = currentChannel?.displayName ?: currentChannel?.name ?: "加载频道中…", style = MaterialTheme.typography.titleLarge)
-//                }
-//
-//                Row(
-//                    modifier = Modifier
-//                        .align(Alignment.BottomCenter)
-//                        .fillMaxWidth()
-//                        .padding(16.dp),
-//                    horizontalArrangement = Arrangement.SpaceEvenly
-//                ) {
-//                    IconButton(onClick = { onRequestAudioPermission() }) {
-//                        Icon(imageVector = Icons.Default.Mic, contentDescription = "语音")
-//                    }
-//                    IconButton(onClick = { showTimerDialog = true }) {
-//                        Icon(imageVector = Icons.Default.Timer, contentDescription = "定时")
-//                    }
-//                    IconButton(onClick = {
-//                        currentChannel?.let { channelViewModel.toggleFavorite(it.id) }
-//                    }) {
-//                        Icon(
-//                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-//                            contentDescription = "收藏"
-//                        )
-//                    }
-//                }
-//
-//                if (showTimerDialog) {
-//                    AlertDialog(
-//                        onDismissRequest = { showTimerDialog = false },
-//                        title = { Text("定时关闭") },
-//                        text = {
-//                            Column {
-//                                listOf(15, 30, 60, 90).forEach { minutes ->
-//                                    TextButton(onClick = {
-//                                        timerManager.setTimer(minutes)
-//                                        Toast.makeText(context, "已设置${minutes}分钟后自动关闭", Toast.LENGTH_SHORT).show()
-//                                        showTimerDialog = false
-//                                    }) {
-//                                        Text("${minutes}分钟")
-//                                    }
-//                                }
-//                                TextButton(onClick = {
-//                                    timerManager.cancelTimer()
-//                                    Toast.makeText(context, "已取消定时关闭", Toast.LENGTH_SHORT).show()
-//                                    showTimerDialog = false
-//                                }) {
-//                                    Text("取消定时")
-//                                }
-//                            }
-//                        },
-//                        confirmButton = {
-//                            TextButton(onClick = { showTimerDialog = false }) {
-//                                Text("关闭")
-//                            }
-//                        }
-//                    )
-//                }
-//            }
-//        }
-//    }
-//}
-
-package com.elderly.tvassistant.activity
+﻿package com.elderly.tvassistant
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -395,13 +12,10 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import com.elderly.tvassistant.R
 import com.elderly.tvassistant.database.AppDatabase
 import com.elderly.tvassistant.manager.PlayerManager
 import com.elderly.tvassistant.manager.TTSManager
@@ -415,7 +29,6 @@ import com.elderly.tvassistant.utils.SharedPrefsHelper
 import com.elderly.tvassistant.viewmodel.ChannelViewModel
 import com.elderly.tvassistant.viewmodel.VoiceViewModel
 import com.elderly.tvassistant.widget.GestureRelativeLayout
-import kotlinx.coroutines.launch
 
 /**
  * 主界面Activity
@@ -451,9 +64,11 @@ class MainActivity : AppCompatActivity() {
 
     // 数据
     private var channelList: List<Channel> = emptyList()
+    private var favoriteChannelList: List<Channel> = emptyList()
     private var currentChannelIndex = 0
     private var currentChannel: Channel? = null
     private var isFirstChannelLoad = true
+    private var pendingTimerMinutes: Int = 0
 
     // 控制栏可见状态
     private var isControlBarVisible = true
@@ -591,6 +206,11 @@ class MainActivity : AppCompatActivity() {
             favoriteBtn.contentDescription = if (isFavorite) "取消收藏" else "添加收藏"
         }
 
+        // 观察收藏频道列表
+        channelViewModel.favoriteChannels.observe(this) { favorites ->
+            favoriteChannelList = favorites
+        }
+
         // 观察语音识别结果
         voiceViewModel.voiceResult.observe(this) { channelName ->
             channelName?.let { name ->
@@ -649,9 +269,42 @@ class MainActivity : AppCompatActivity() {
      */
     private fun setupMenuButton() {
         menuBtn.setOnClickListener {
-            // 暂不实现侧边栏，显示频道列表对话框
-            showChannelListDialog()
+            showMainMenuDialog()
         }
+    }
+
+    /**
+     * 显示主菜单对话框
+     */
+    private fun showMainMenuDialog() {
+        val menuItems = arrayOf("查看收藏", "所有频道", "取消")
+        AlertDialog.Builder(this)
+            .setTitle("菜单")
+            .setItems(menuItems) { _, which ->
+                when (which) {
+                    0 -> showFavoriteListDialog()
+                    1 -> showChannelListDialog()
+                }
+            }
+            .show()
+    }
+
+    /**
+     * 显示收藏列表对话框
+     */
+    private fun showFavoriteListDialog() {
+        if (favoriteChannelList.isEmpty()) {
+            showToast("暂无收藏频道")
+            return
+        }
+        val channelNames = favoriteChannelList.map { it.displayName ?: it.name }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("我的收藏")
+            .setItems(channelNames) { _, which ->
+                switchToChannel(favoriteChannelList[which])
+            }
+            .setNegativeButton("取消", null)
+            .show()
     }
 
     /**
@@ -714,12 +367,12 @@ class MainActivity : AppCompatActivity() {
      * 显示定时关闭选择对话框
      */
     private fun showTimerDialog() {
-        val minutes = arrayOf("15分钟", "30分钟", "60分钟", "90分钟", "取消定时")
+        val minutes = arrayOf("1分钟", "30分钟", "60分钟", "90分钟", "取消定时")
         AlertDialog.Builder(this)
             .setTitle("定时关闭")
             .setItems(minutes)  { _, which ->
                 when (which) {
-                    0 -> setTimer(15)
+                    0 -> setTimer(1)
                     1 -> setTimer(30)
                     2 -> setTimer(60)
                     3 -> setTimer(90)
@@ -734,6 +387,46 @@ class MainActivity : AppCompatActivity() {
      */
     @SuppressLint("ScheduleExactAlarm")
     private fun setTimer(minutes: Int) {
+        pendingTimerMinutes = minutes
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (permissionHelper.canScheduleExactAlarms()) {
+                executeSetTimer(minutes)
+            } else {
+                showExactAlarmPermissionDialog()
+            }
+        } else {
+            executeSetTimer(minutes)
+        }
+    }
+
+    /**
+     * 显示精确闹钟权限请求对话框
+     */
+    private fun showExactAlarmPermissionDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("需要精确闹钟权限")
+            .setMessage("为了确保定时功能正常工作，需要授予精确闹钟权限。\n\n点击确定前往设置页面开启权限。")
+            .setPositiveButton("确定") { _, _ ->
+                val intent = permissionHelper.getExactAlarmSettingsIntent()
+                try {
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    showToast("无法打开设置页面")
+                }
+            }
+            .setNegativeButton("取消") { _, _ ->
+                pendingTimerMinutes = 0
+                showToast("定时功能需要精确闹钟权限")
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    /**
+     * 执行设置定时关闭
+     */
+    @SuppressLint("ScheduleExactAlarm")
+    private fun executeSetTimer(minutes: Int) {
         timerManager.setTimer(minutes)
         timerBtn.isSelected = true
         showToast("已设置${minutes}分钟后自动关闭")
@@ -745,6 +438,7 @@ class MainActivity : AppCompatActivity() {
     private fun cancelTimer() {
         timerManager.cancelTimer()
         timerBtn.isSelected = false
+        pendingTimerMinutes = 0
         showToast("已取消定时关闭")
     }
 
@@ -795,7 +489,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun vibrate() {
         if (prefsHelper.isVibrateEnabled) {
-            val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
             } else {
@@ -830,6 +524,13 @@ class MainActivity : AppCompatActivity() {
         if (currentChannel != null && !playerManager.isCurrentlyPlaying()) {
             playerManager.play(currentChannel!!.url)
         }
+
+        // 检查是否有待处理的定时设置
+        if (pendingTimerMinutes > 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (permissionHelper.canScheduleExactAlarms()) {
+                executeSetTimer(pendingTimerMinutes)
+            }
+        }
     }
 
     override fun onPause() {
@@ -854,7 +555,7 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             PERMISSION_VOICE_CODE -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     voiceManager.startListening()
                 } else {
                     showToast("需要录音权限才能使用语音功能")
