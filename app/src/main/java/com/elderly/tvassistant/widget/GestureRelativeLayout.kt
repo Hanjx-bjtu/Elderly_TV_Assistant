@@ -3,6 +3,7 @@ package com.elderly.tvassistant.widget
 import android.content.Context
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.View
 import android.widget.RelativeLayout
 
 /**
@@ -11,6 +12,9 @@ import android.widget.RelativeLayout
  * - 左侧1/3: 点击触发上一频道
  * - 中间1/3: 点击触发显示/隐藏控制栏
  * - 右侧1/3: 点击触发下一频道
+ * 
+ * 重要：此布局会拦截视频区域的触摸事件，防止WebView内的点击干扰应用手势操作
+ * 但不会拦截底部控制栏区域的触摸事件，让按钮正常工作
  */
 class GestureRelativeLayout @JvmOverloads constructor(
     context: Context,
@@ -20,6 +24,7 @@ class GestureRelativeLayout @JvmOverloads constructor(
 
     companion object {
         private const val CLICK_THRESHOLD = 50  // 点击位移阈值（像素）
+        private const val BOTTOM_BAR_HEIGHT_THRESHOLD = 250  // 底部控制栏高度阈值（像素）
     }
 
     /** 区域点击回调接口 */
@@ -38,6 +43,27 @@ class GestureRelativeLayout @JvmOverloads constructor(
      */
     fun setOnRegionClickListener(listener: OnRegionClickListener) {
         this.listener = listener
+    }
+
+    /**
+     * 拦截触摸事件，防止传递给WebView
+     * 但不拦截底部控制栏区域的触摸事件，让按钮正常工作
+     */
+    override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                touchStartX = event.x
+                touchStartY = event.y
+                
+                // 检查触摸点是否在底部控制栏区域
+                val isInBottomBar = event.y > (height - BOTTOM_BAR_HEIGHT_THRESHOLD)
+                
+                // 如果在底部控制栏区域，不拦截，让按钮正常工作
+                // 否则拦截，防止WebView接收触摸事件
+                return !isInBottomBar
+            }
+        }
+        return false
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {

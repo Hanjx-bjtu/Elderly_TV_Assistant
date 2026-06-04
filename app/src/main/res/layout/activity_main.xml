@@ -8,6 +8,7 @@
     android:fitsSystemWindows="true">
 
     <!-- 视频播放容器 -->
+    <!-- WebView会被GestureRelativeLayout拦截触摸事件，防止网页点击干扰 -->
     <FrameLayout
         android:id="@+id/video_container"
         android:layout_width="match_parent"
@@ -16,6 +17,7 @@
 
     <!-- 半透明遮罩底部控制栏 -->
     <LinearLayout
+        android:id="@+id/bottom_control_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"

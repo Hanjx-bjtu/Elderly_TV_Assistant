@@ -64,6 +64,7 @@ class PlayerManager(
     /**
      * 初始化WebView播放器
      * 配置WebView以支持视频自动播放和全屏
+     * 注意：WebView的触摸事件被上层TouchInterceptorView拦截，防止网页点击干扰
      */
     private fun initWebView() {
         webView = WebView(context).apply {
@@ -87,6 +88,12 @@ class PlayerManager(
                 databaseEnabled = true
                 setSupportZoom(false)
             }
+
+            // 禁用WebView的触摸事件处理，所有触摸由上层TouchInterceptorView拦截
+            isClickable = false
+            isFocusable = false
+            isFocusableInTouchMode = false
+            setOnTouchListener(null)
 
             // 设置WebChromeClient以支持视频全屏
             webChromeClient = object : WebChromeClient() {
