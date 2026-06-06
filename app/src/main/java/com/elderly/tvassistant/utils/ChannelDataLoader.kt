@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.elderly.tvassistant.model.Channel
 import com.google.gson.Gson
+import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
 import java.io.BufferedReader
 import java.io.IOException
@@ -17,8 +18,9 @@ import java.io.InputStreamReader
 object ChannelDataLoader {
 
     private const val TAG = "ChannelDataLoader"
-    private const val CHANNELS_FILE = "channels.json"
+//    private const val CHANNELS_FILE = "com/elderly/tvassistant/utils/channels.json"
 
+    private const val CHANNELS_FILE = "channels.json"
     /**
      * 数据模型（JSON解析用）
      */
@@ -45,8 +47,11 @@ object ChannelDataLoader {
                 return emptyList()
             }
 
-            val type = object : TypeToken<List<ChannelData>>() {}.type
-            val channelDataList: List<ChannelData> = Gson().fromJson(json, type)
+            val jsonObject = JsonParser.parseString(json).asJsonObject
+            val channelsJson = jsonObject.getAsJsonArray("channels").toString()
+
+            val typee = object : TypeToken<List<ChannelData>>() {}.type
+            val channelDataList: List<ChannelData> = Gson().fromJson(channelsJson, typee)
 
             channelDataList.map { data ->
                 Channel(

@@ -24,7 +24,7 @@ class GestureRelativeLayout @JvmOverloads constructor(
 
     companion object {
         private const val CLICK_THRESHOLD = 50  // 点击位移阈值（像素）
-        private const val BOTTOM_BAR_HEIGHT_THRESHOLD = 250  // 底部控制栏高度阈值（像素）
+        private const val BOTTOM_BAR_HEIGHT_THRESHOLD = 500  // 底部控制栏高度阈值（像素）
     }
 
     /** 区域点击回调接口 */
@@ -56,8 +56,9 @@ class GestureRelativeLayout @JvmOverloads constructor(
                 touchStartY = event.y
                 
                 // 检查触摸点是否在底部控制栏区域
-                val isInBottomBar = event.y > (height - BOTTOM_BAR_HEIGHT_THRESHOLD)
-                
+//                val isInBottomBar = event.y > (height - BOTTOM_BAR_HEIGHT_THRESHOLD)
+
+                val isInBottomBar = event.y < BOTTOM_BAR_HEIGHT_THRESHOLD
                 // 如果在底部控制栏区域，不拦截，让按钮正常工作
                 // 否则拦截，防止WebView接收触摸事件
                 return !isInBottomBar
