@@ -49,8 +49,8 @@
             <!-- 语音按钮 -->
             <ImageButton
                 android:id="@+id/btn_voice"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:src="@drawable/ic_mic"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="语音换台"
@@ -64,8 +64,8 @@
             <!-- 定时按钮 -->
             <ImageButton
                 android:id="@+id/btn_timer"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:src="@drawable/ic_timer"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="定时关闭"
@@ -79,8 +79,8 @@
             <!-- 收藏按钮 -->
             <ImageButton
                 android:id="@+id/btn_favorite"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:src="@drawable/star_selector"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="收藏"
@@ -88,17 +88,32 @@
                 android:padding="12dp" />
 
             <Space
-                android:layout_width="24dp"
+                android:layout_width="16dp"
                 android:layout_height="0dp" />
 
             <!-- 菜单按钮 -->
             <ImageButton
                 android:id="@+id/btn_menu"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:src="@drawable/ic_menu"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="频道列表"
+                android:contentDescription="菜单"
+                android:scaleType="centerInside"
+                android:padding="12dp" />
+
+            <Space
+                android:layout_width="16dp"
+                android:layout_height="0dp" />
+
+            <!-- 设置按钮 -->
+            <ImageButton
+                android:id="@+id/btn_settings"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/ic_settings"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="设置"
                 android:scaleType="centerInside"
                 android:padding="12dp" />
 

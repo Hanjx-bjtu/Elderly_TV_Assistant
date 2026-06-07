@@ -21,4 +21,19 @@
     <string name="guide_skip">跳过</string>
     <string name="guide_next">下一步</string>
     <string name="guide_start">开始使用</string>
+    <string name="settings_title">设置</string>
+    <string name="settings_font_size">字体大小</string>
+    <string name="settings_tts">语音播报</string>
+    <string name="settings_tts_desc">换台时播报频道名称</string>
+    <string name="settings_auto_play">启动时自动播放</string>
+    <string name="settings_auto_play_desc">打开应用时自动播放默认频道</string>
+    <string name="settings_default_channel">默认频道</string>
+    <string name="settings_vibrate">震动反馈</string>
+    <string name="settings_vibrate_desc">换台时震动提示</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_about_desc">版本信息和帮助</string>
+    <string name="settings_group_display">显示</string>
+    <string name="settings_group_playback">播放</string>
+    <string name="settings_group_interaction">交互</string>
+    <string name="settings_group_other">其他</string>
 </resources>

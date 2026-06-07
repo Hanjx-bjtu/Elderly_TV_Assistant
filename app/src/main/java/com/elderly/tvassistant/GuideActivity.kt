@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import com.elderly.tvassistant.BaseActivity
 import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.elderly.tvassistant.MainActivity
@@ -20,7 +20,7 @@ import com.google.android.material.button.MaterialButton
  * 首次启动时展示3页图文引导，介绍核心操作方法
  * 用户看完后进入主界面
  */
-class GuideActivity : AppCompatActivity() {
+class GuideActivity : BaseActivity() {
 
     private lateinit var viewPager: ViewPager2
     private lateinit var indicatorLayout: LinearLayout

@@ -10,37 +10,85 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="16dp">
+
+        <!-- ========== 显示设置分组 ========== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="显示"
+            android:textColor="@color/colorAccent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp" />
 
         <!-- 字体大小设置 -->
         <LinearLayout
             android:id="@+id/layout_font_size"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:padding="20dp"
             android:background="@drawable/bg_settings_item"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="2dp"
             android:clickable="true"
             android:focusable="true">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_font"
+                android:contentDescription="字体"
+                android:layout_marginEnd="16dp"
+                android:scaleType="centerInside" />
+
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="字体大小"
-                android:textColor="@color/colorTextPrimary"
-                android:textSize="24sp" />
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="字体大小"
+                    android:textColor="@color/colorTextPrimary"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tv_font_size_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="超大"
+                    android:textColor="@color/colorTextSecondary"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/tv_font_size_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="超大"
+                android:text=">"
                 android:textColor="@color/colorTextSecondary"
-                android:textSize="18sp" />
+                android:textSize="20sp"
+                android:layout_marginStart="8dp" />
 
         </LinearLayout>
+
+        <!-- ========== 播放设置分组 ========== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="播放"
+            android:textColor="@color/colorAccent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" />
 
         <!-- 语音播报开关 -->
         <LinearLayout
@@ -50,15 +98,38 @@
             android:gravity="center_vertical"
             android:padding="20dp"
             android:background="@drawable/bg_settings_item"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="2dp">
 
-            <TextView
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_voice"
+                android:contentDescription="语音"
+                android:layout_marginEnd="16dp"
+                android:scaleType="centerInside" />
+
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="语音播报"
-                android:textColor="@color/colorTextPrimary"
-                android:textSize="24sp" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="语音播报"
+                    android:textColor="@color/colorTextPrimary"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="换台时播报频道名称"
+                    android:textColor="@color/colorTextSecondary"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switch_tts"
@@ -68,7 +139,7 @@
 
         </LinearLayout>
 
-        <!-- 震动反馈开关 -->
+        <!-- 自动播放开关 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -76,18 +147,41 @@
             android:gravity="center_vertical"
             android:padding="20dp"
             android:background="@drawable/bg_settings_item"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="2dp">
 
-            <TextView
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_tv"
+                android:contentDescription="自动播放"
+                android:layout_marginEnd="16dp"
+                android:scaleType="centerInside" />
+
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="震动反馈"
-                android:textColor="@color/colorTextPrimary"
-                android:textSize="24sp" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="启动时自动播放"
+                    android:textColor="@color/colorTextPrimary"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="打开应用时自动播放默认频道"
+                    android:textColor="@color/colorTextSecondary"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
 
             <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switch_vibrate"
+                android:id="@+id/switch_auto_play"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:switchMinWidth="80dp" />
@@ -99,28 +193,179 @@
             android:id="@+id/layout_default_channel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:padding="20dp"
             android:background="@drawable/bg_settings_item"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="2dp"
             android:clickable="true"
             android:focusable="true">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_menu"
+                android:contentDescription="频道"
+                android:layout_marginEnd="16dp"
+                android:scaleType="centerInside" />
+
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="默认频道"
-                android:textColor="@color/colorTextPrimary"
-                android:textSize="24sp" />
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="默认频道"
+                    android:textColor="@color/colorTextPrimary"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tv_default_channel_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/colorTextSecondary"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/tv_default_channel_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="CCTV-1 综合"
+                android:text=">"
                 android:textColor="@color/colorTextSecondary"
-                android:textSize="18sp" />
+                android:textSize="20sp"
+                android:layout_marginStart="8dp" />
+
+        </LinearLayout>
+
+        <!-- ========== 交互设置分组 ========== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="交互"
+            android:textColor="@color/colorAccent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 震动反馈开关 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="20dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginBottom="2dp">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_swipe"
+                android:contentDescription="震动"
+                android:layout_marginEnd="16dp"
+                android:scaleType="centerInside" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="震动反馈"
+                    android:textColor="@color/colorTextPrimary"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="换台时震动提示"
+                    android:textColor="@color/colorTextSecondary"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_vibrate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:switchMinWidth="80dp" />
+
+        </LinearLayout>
+
+        <!-- ========== 其他分组 ========== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="其他"
+            android:textColor="@color/colorAccent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 关于 -->
+        <LinearLayout
+            android:id="@+id/layout_about"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="20dp"
+            android:background="@drawable/bg_settings_item"
+            android:layout_marginBottom="2dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_about"
+                android:contentDescription="关于"
+                android:layout_marginEnd="16dp"
+                android:scaleType="centerInside" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="关于"
+                    android:textColor="@color/colorTextPrimary"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="版本信息和帮助"
+                    android:textColor="@color/colorTextSecondary"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=">"
+                android:textColor="@color/colorTextSecondary"
+                android:textSize="20sp"
+                android:layout_marginStart="8dp" />
 
         </LinearLayout>
 

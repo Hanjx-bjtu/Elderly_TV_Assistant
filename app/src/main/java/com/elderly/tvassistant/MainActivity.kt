@@ -2,18 +2,25 @@
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.speech.RecognizerIntent
+import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import com.elderly.tvassistant.BaseActivity
+import com.elderly.tvassistant.activity.SettingsActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
 import com.elderly.tvassistant.database.AppDatabase
@@ -21,6 +28,7 @@ import com.elderly.tvassistant.manager.PlayerManager
 import com.elderly.tvassistant.manager.TTSManager
 import com.elderly.tvassistant.manager.TimerManager
 import com.elderly.tvassistant.manager.VoiceManager
+import com.elderly.tvassistant.manager.VoskVoiceManager
 import com.elderly.tvassistant.model.Channel
 import com.elderly.tvassistant.repository.ChannelRepository
 import com.elderly.tvassistant.repository.FavoriteRepository
@@ -39,7 +47,7 @@ import com.elderly.tvassistant.widget.GestureRelativeLayout
  * 4. 协调语音识别、TTS播报、定时关闭等功能
  * 5. 处理返回键退出确认
  */
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 
     // UI组件
     private lateinit var videoContainer: FrameLayout
@@ -48,6 +56,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var timerBtn: ImageButton
     private lateinit var favoriteBtn: ImageButton
     private lateinit var menuBtn: ImageButton
+    private lateinit var settingsBtn: ImageButton
     private lateinit var gestureLayout: GestureRelativeLayout
 
     // 管理器
@@ -73,14 +82,30 @@ class MainActivity : AppCompatActivity() {
     // 控制栏可见状态
     private var isControlBarVisible = true
 
+    // Intent方式语音识别启动器（SpeechRecognizer不可用时的回退方案）
+    private lateinit var speechRecognizerLauncher: ActivityResultLauncher<Intent>
+
     companion object {
         private const val TAG = "MainActivity"
         private const val PERMISSION_VOICE_CODE = 100
+        private const val PREFS_VOICE_ASKED = "voice_permission_asked"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        speechRecognizerLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            voiceBtn.isSelected = false
+            if (result.resultCode == RESULT_OK) {
+                val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                val spokenText = matches?.firstOrNull() ?: ""
+                val matchedChannel = voiceManager.matchSpokenText(spokenText)
+                voiceViewModel.setVoiceResult(matchedChannel)
+            }
+        }
 
         // 处理定时关闭退出
         if (intent?.getBooleanExtra("TIMER_OFF", false) == true) {
@@ -107,6 +132,7 @@ class MainActivity : AppCompatActivity() {
         timerBtn = findViewById(R.id.btn_timer)
         favoriteBtn = findViewById(R.id.btn_favorite)
         menuBtn = findViewById(R.id.btn_menu)
+        settingsBtn = findViewById(R.id.btn_settings)
         gestureLayout = findViewById(R.id.gesture_layout)
     }
 
@@ -172,7 +198,9 @@ class MainActivity : AppCompatActivity() {
             override fun onError(error: String) {
                 runOnUiThread {
                     voiceBtn.isSelected = false
-                    // 静默处理，避免困扰老人
+                    if (error.contains("不支持") || error.contains("不可用")) {
+                        Toast.makeText(this@MainActivity, error, Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         })
@@ -193,9 +221,17 @@ class MainActivity : AppCompatActivity() {
                 // 首次加载时播放默认频道
                 if (isFirstChannelLoad) {
                     isFirstChannelLoad = false
-                    val defaultChannelId = prefsHelper.defaultChannelId
-                    val defaultChannel = channels.find { it.id == defaultChannelId } ?: channels.first()
-                    switchToChannel(defaultChannel)
+                    if (prefsHelper.isAutoPlayEnabled) {
+                        val defaultChannelId = prefsHelper.defaultChannelId
+                        val defaultChannel = channels.find { it.id == defaultChannelId } ?: channels.first()
+                        switchToChannel(defaultChannel)
+                    } else {
+                        val defaultChannelId = prefsHelper.defaultChannelId
+                        currentChannel = channels.find { it.id == defaultChannelId } ?: channels.first()
+                        currentChannelIndex = channels.indexOf(currentChannel).coerceAtLeast(0)
+                        currentChannelText.text = currentChannel?.displayName ?: currentChannel?.name ?: ""
+                        channelViewModel.checkFavorite(currentChannel?.id ?: -1)
+                    }
                 }
             }
         }
@@ -262,6 +298,9 @@ class MainActivity : AppCompatActivity() {
         voiceBtn.setOnClickListener { startVoiceRecognition() }
         timerBtn.setOnClickListener { showTimerDialog() }
         favoriteBtn.setOnClickListener { toggleFavorite() }
+        settingsBtn.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
     }
 
     /**
@@ -277,13 +316,14 @@ class MainActivity : AppCompatActivity() {
      * 显示主菜单对话框
      */
     private fun showMainMenuDialog() {
-        val menuItems = arrayOf("查看收藏", "所有频道", "取消")
+        val menuItems = arrayOf("查看收藏", "所有频道", "设置")
         AlertDialog.Builder(this)
             .setTitle("菜单")
             .setItems(menuItems) { _, which ->
                 when (which) {
                     0 -> showFavoriteListDialog()
                     1 -> showChannelListDialog()
+                    2 -> startActivity(Intent(this, SettingsActivity::class.java))
                 }
             }
             .show()
@@ -352,27 +392,143 @@ class MainActivity : AppCompatActivity() {
      * 启动语音识别
      */
     private fun startVoiceRecognition() {
-        if (permissionHelper.hasPermission(Manifest.permission.RECORD_AUDIO)) {
-            voiceManager.startListening()
-        } else {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.RECORD_AUDIO),
-                PERMISSION_VOICE_CODE
-            )
+        Log.d(TAG, "startVoiceRecognition: 开始")
+
+        if (!permissionHelper.hasPermission(Manifest.permission.RECORD_AUDIO)) {
+            val hasAskedBefore = getSharedPreferences("voice_prefs", MODE_PRIVATE)
+                .getBoolean(PREFS_VOICE_ASKED, false)
+
+            if (hasAskedBefore &&
+                !ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)) {
+                Log.w(TAG, "权限被永久拒绝，引导用户去设置")
+                AlertDialog.Builder(this)
+                    .setTitle("权限被拒绝")
+                    .setMessage("语音功能需要录音权限，请在设置中手动开启")
+                    .setPositiveButton("去设置") { _, _ ->
+                        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.parse("package:$packageName")
+                        }
+                        startActivity(intent)
+                    }
+                    .setNegativeButton("取消", null)
+                    .show()
+            } else {
+                Log.d(TAG, "请求录音权限")
+                getSharedPreferences("voice_prefs", MODE_PRIVATE).edit()
+                    .putBoolean(PREFS_VOICE_ASKED, true).apply()
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.RECORD_AUDIO),
+                    PERMISSION_VOICE_CODE
+                )
+            }
+            return
         }
+
+        Log.d(TAG, "录音权限已授予，检查语音识别可用性")
+
+        if (voiceManager.isAvailable()) {
+            Log.d(TAG, "语音识别可用，开始监听")
+            voiceManager.startListening()
+        } else if (voiceManager.isVoskModelDownloaded()) {
+            Log.d(TAG, "Vosk模型已下载，尝试加载")
+            voiceManager.init()
+            if (voiceManager.isAvailable()) {
+                voiceManager.startListening()
+            } else {
+                Toast.makeText(this, "语音模型加载失败，请重启应用", Toast.LENGTH_SHORT).show()
+            }
+        } else if (voiceManager.isVoskDownloading()) {
+            Toast.makeText(this, "语音模型正在下载中，请稍候...", Toast.LENGTH_SHORT).show()
+        } else if (voiceManager.isIntentRecognitionAvailable()) {
+            Log.d(TAG, "使用Intent方式启动语音识别")
+            voiceBtn.isSelected = true
+            try {
+                speechRecognizerLauncher.launch(voiceManager.createRecognizerIntent())
+            } catch (e: Exception) {
+                voiceBtn.isSelected = false
+                Toast.makeText(this, "无法启动语音识别", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Log.d(TAG, "无可用语音识别引擎，提示下载Vosk模型")
+            showVoskDownloadDialog()
+        }
+    }
+
+    /**
+     * 显示Vosk离线语音模型下载对话框
+     */
+    private fun showVoskDownloadDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("下载离线语音识别模型")
+            .setMessage("该设备未安装在线语音识别引擎，需要下载离线语音模型（约42MB）。\n\n" +
+                    "下载完成后即可在无网络环境下使用语音换台功能。")
+            .setPositiveButton("下载") { _, _ ->
+                startVoskModelDownload()
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private var voskDownloadDialog: AlertDialog? = null
+
+    private fun startVoskModelDownload() {
+        val progressDialog = AlertDialog.Builder(this)
+            .setTitle("下载语音模型")
+            .setMessage("正在下载... 0%")
+            .setNegativeButton("取消") { _, _ ->
+                voiceManager.cancelVoskDownload()
+                voskDownloadDialog = null
+            }
+            .setCancelable(false)
+            .create()
+        voskDownloadDialog = progressDialog
+        progressDialog.show()
+
+        voiceManager.downloadVoskModel(object : VoskVoiceManager.DownloadCallback {
+            override fun onProgress(progress: Int) {
+                runOnUiThread {
+                    if (progress < 0) {
+                        progressDialog.setMessage("正在解压模型...")
+                    } else {
+                        progressDialog.setMessage("正在下载... $progress%")
+                    }
+                }
+            }
+
+            override fun onComplete() {
+                runOnUiThread {
+                    voskDownloadDialog?.dismiss()
+                    voskDownloadDialog = null
+                    Toast.makeText(this@MainActivity, "语音模型下载完成，请点击语音按钮开始使用", Toast.LENGTH_LONG).show()
+                }
+            }
+
+            override fun onError(error: String) {
+                runOnUiThread {
+                    voskDownloadDialog?.dismiss()
+                    voskDownloadDialog = null
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle("下载失败")
+                        .setMessage("语音模型下载失败：$error\n\n请检查网络连接后重试。")
+                        .setPositiveButton("重试") { _, _ -> startVoskModelDownload() }
+                        .setNegativeButton("取消", null)
+                        .show()
+                }
+            }
+        })
     }
 
     /**
      * 显示定时关闭选择对话框
      */
     private fun showTimerDialog() {
-        val minutes = arrayOf("1分钟", "30分钟", "60分钟", "90分钟", "取消定时")
+        val minutes = arrayOf("15分钟", "30分钟", "60分钟", "90分钟", "取消定时")
         AlertDialog.Builder(this)
             .setTitle("定时关闭")
             .setItems(minutes)  { _, which ->
                 when (which) {
-                    0 -> setTimer(1)
+                    0 -> setTimer(15)
                     1 -> setTimer(30)
                     2 -> setTimer(60)
                     3 -> setTimer(90)
@@ -482,6 +638,7 @@ class MainActivity : AppCompatActivity() {
         timerBtn.visibility = visibility
         favoriteBtn.visibility = visibility
         menuBtn.visibility = visibility
+        settingsBtn.visibility = visibility
     }
 
     /**
@@ -556,9 +713,25 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             PERMISSION_VOICE_CODE -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    voiceManager.startListening()
+                    Log.d(TAG, "录音权限已授予")
+                    startVoiceRecognition()
                 } else {
-                    showToast("需要录音权限才能使用语音功能")
+                    Log.w(TAG, "录音权限被拒绝")
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)) {
+                        AlertDialog.Builder(this)
+                            .setTitle("权限被拒绝")
+                            .setMessage("语音功能需要录音权限，请在设置中手动开启")
+                            .setPositiveButton("去设置") { _, _ ->
+                                val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                    data = Uri.parse("package:$packageName")
+                                }
+                                startActivity(intent)
+                            }
+                            .setNegativeButton("取消", null)
+                            .show()
+                    } else {
+                        showToast("需要录音权限才能使用语音功能")
+                    }
                 }
             }
         }

@@ -1,7 +1,9 @@
 package com.elderly.tvassistant.manager
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -9,47 +11,118 @@ import android.speech.SpeechRecognizer
 import android.util.Log
 import com.elderly.tvassistant.model.Channel
 
-/**
- * 语音识别管理器
- * 封装Android SpeechRecognizer，实现语音换台功能
- * 将识别的文字与频道关键词进行模糊匹配
- */
 class VoiceManager(
     private val context: Context,
     private val callback: VoiceCallback
 ) {
 
-    /** 语音识别回调接口 */
     interface VoiceCallback {
-        fun onListeningStart()           // 开始监听（可用于UI反馈）
-        fun onResult(channelName: String?) // 识别结果（匹配到的频道名）
-        fun onError(error: String)       // 识别错误
+        fun onListeningStart()
+        fun onResult(channelName: String?)
+        fun onError(error: String)
     }
 
     private var speechRecognizer: SpeechRecognizer? = null
-    private var channelKeywords: Map<String, String> = emptyMap()  // keyword -> channelName
+    private var channelKeywords: Map<String, String> = emptyMap()
+    private var discoveredService: ComponentName? = null
+    private var useVosk = false
+    private val voskManager: VoskVoiceManager = VoskVoiceManager(context)
 
     companion object {
         private const val TAG = "VoiceManager"
+        private val KNOWN_SERVICES = listOf(
+            ComponentName(
+                "com.google.android.googlequicksearchbox",
+                "com.google.android.voicesearch.serviceapi.GoogleRecognitionService"
+            ),
+            ComponentName(
+                "com.huawei.vassistant",
+                "com.huawei.vassistant.recognition.VoiceRecognitionService"
+            ),
+            ComponentName(
+                "com.xiaomi.voiceassistant",
+                "com.xiaomi.voiceassistant.MivoiceRecognitionService"
+            ),
+            ComponentName(
+                "com.samsung.android.bixby.agent",
+                "com.samsung.android.voiceservice.VoiceRecognitionService"
+            ),
+            ComponentName(
+                "com.iflytek.speechcloud",
+                "com.iflytek.speechcloud.RecognitionService"
+            )
+        )
     }
 
-    /**
-     * 初始化语音识别器
-     */
-    fun init() {
+    private fun findRecognitionService(): ComponentName? {
         try {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
-                setRecognitionListener(createRecognitionListener())
+            val intent = Intent("android.speech.RecognitionService")
+            val services = context.packageManager.queryIntentServices(intent, 0)
+            for (resolveInfo in services) {
+                val serviceInfo = resolveInfo.serviceInfo
+                val component = ComponentName(serviceInfo.packageName, serviceInfo.name)
+                Log.d(TAG, "发现语音识别服务(查询): $component")
+                return component
             }
         } catch (e: Exception) {
-            Log.e(TAG, "语音识别器初始化失败: ${e.message}")
-            callback.onError("语音识别不可用")
+            Log.w(TAG, "查询语音识别服务失败: ${e.message}")
         }
+
+        for (service in KNOWN_SERVICES) {
+            try {
+                context.packageManager.getServiceInfo(service, 0)
+                Log.d(TAG, "发现语音识别服务(已知): $service")
+                return service
+            } catch (_: Exception) {
+            }
+        }
+
+        return null
     }
 
-    /**
-     * 创建语音识别监听器
-     */
+    fun init() {
+        Log.d(TAG, "init: 开始初始化，isRecognitionAvailable=${SpeechRecognizer.isRecognitionAvailable(context)}")
+
+        if (SpeechRecognizer.isRecognitionAvailable(context)) {
+            try {
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
+                    setRecognitionListener(createRecognitionListener())
+                }
+                useVosk = false
+                Log.d(TAG, "init: 使用系统默认语音识别服务")
+                return
+            } catch (e: Exception) {
+                Log.e(TAG, "默认语音识别器创建失败: ${e.message}")
+            }
+        }
+
+        discoveredService = findRecognitionService()
+        if (discoveredService != null) {
+            try {
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context, discoveredService).apply {
+                    setRecognitionListener(createRecognitionListener())
+                }
+                Log.d(TAG, "init: 使用发现的语音识别服务: $discoveredService")
+                useVosk = false
+                return
+            } catch (e: Exception) {
+                Log.e(TAG, "语音识别器创建失败: ${e.message}")
+            }
+        }
+
+        Log.d(TAG, "init: 系统语音识别不可用，检查Vosk模型，isModelDownloaded=${voskManager.isModelDownloaded()}")
+        if (voskManager.isModelDownloaded()) {
+            voskManager.loadModel()
+            if (voskManager.isModelReady()) {
+                useVosk = true
+                Log.d(TAG, "init: 使用Vosk离线语音识别引擎")
+                return
+            }
+        }
+
+        Log.w(TAG, "init: 所有语音识别方式均不可用")
+    }
+
     private fun createRecognitionListener(): RecognitionListener {
         return object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
@@ -61,13 +134,9 @@ class VoiceManager(
                 Log.d(TAG, "检测到语音开始")
             }
 
-            override fun onRmsChanged(rmsDB: Float) {
-                // 音量变化回调，可用于UI波形动画
-            }
+            override fun onRmsChanged(rmsDB: Float) {}
 
-            override fun onBufferReceived(buffer: ByteArray?) {
-                // 缓冲区数据回调
-            }
+            override fun onBufferReceived(buffer: ByteArray?) {}
 
             override fun onEndOfSpeech() {
                 Log.d(TAG, "语音结束")
@@ -87,8 +156,6 @@ class VoiceManager(
                     else -> "识别失败(错误码: $error)"
                 }
                 Log.e(TAG, "语音识别错误: $errorMsg")
-
-                // 静默处理，不中断当前播放（避免困扰老人）
                 callback.onError(errorMsg)
             }
 
@@ -96,35 +163,21 @@ class VoiceManager(
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 val spokenText = matches?.firstOrNull() ?: ""
                 Log.d(TAG, "识别结果: $spokenText")
-
                 val matchedChannel = matchChannel(spokenText)
                 callback.onResult(matchedChannel)
             }
 
-            override fun onPartialResults(partialResults: Bundle?) {
-                // 部分识别结果（实时识别中间结果）
-                val partial = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                Log.d(TAG, "部分识别结果: $partial")
-            }
+            override fun onPartialResults(partialResults: Bundle?) {}
 
-            override fun onEvent(eventType: Int, params: Bundle?) {
-                // 其他事件
-            }
+            override fun onEvent(eventType: Int, params: Bundle?) {}
         }
     }
 
-    /**
-     * 更新频道关键词库
-     * @param channels 当前所有频道列表
-     */
     fun updateKeywords(channels: List<Channel>) {
         channelKeywords = buildMap {
             channels.forEach { channel ->
-                // 添加频道名称本身作为关键词
                 put(channel.name.lowercase(), channel.name)
-                // 添加显示名称
                 channel.displayName?.let { put(it.lowercase(), channel.name) }
-                // 添加所有预设关键词
                 channel.keywords.forEach { keyword ->
                     put(keyword.lowercase(), channel.name)
                 }
@@ -132,17 +185,10 @@ class VoiceManager(
         }
     }
 
-    /**
-     * 将识别的文字与频道关键词进行匹配
-     * 使用模糊匹配：识别文字中包含关键词即匹配成功
-     * @param spokenText 语音识别的文字
-     * @return 匹配到的频道名称，未匹配到返回null
-     */
     private fun matchChannel(spokenText: String): String? {
         val lowerText = spokenText.lowercase().trim()
         if (lowerText.isEmpty()) return null
 
-        // 遍历关键词，查找匹配
         for ((keyword, channelName) in channelKeywords) {
             if (lowerText.contains(keyword)) {
                 Log.d(TAG, "匹配成功: 关键词='$keyword' -> 频道='$channelName'")
@@ -154,15 +200,97 @@ class VoiceManager(
         return null
     }
 
-    /**
-     * 开始语音监听
-     */
+    fun isAvailable(): Boolean {
+        val systemAvailable = SpeechRecognizer.isRecognitionAvailable(context)
+        val hasDiscoveredService = discoveredService != null || findRecognitionService() != null
+        val voskReady = voskManager.isModelReady()
+        val result = systemAvailable || hasDiscoveredService || voskReady
+        Log.d(TAG, "isAvailable: system=$systemAvailable, discovered=$hasDiscoveredService, vosk=$voskReady, result=$result")
+        return result
+    }
+
+    fun isVoskAvailable(): Boolean = voskManager.isModelReady()
+
+    fun isVoskModelDownloaded(): Boolean = voskManager.isModelDownloaded()
+
+    fun isVoskDownloading(): Boolean = voskManager.isDownloading()
+
+    fun downloadVoskModel(downloadCallback: VoskVoiceManager.DownloadCallback) {
+        voskManager.downloadModel(object : VoskVoiceManager.DownloadCallback {
+            override fun onProgress(progress: Int) {
+                downloadCallback.onProgress(progress)
+            }
+
+            override fun onComplete() {
+                useVosk = true
+                downloadCallback.onComplete()
+            }
+
+            override fun onError(error: String) {
+                downloadCallback.onError(error)
+            }
+        })
+    }
+
+    fun cancelVoskDownload() {
+        voskManager.cancelDownload()
+    }
+
+    fun isIntentRecognitionAvailable(): Boolean {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        return intent.resolveActivity(context.packageManager) != null
+    }
+
+    fun matchSpokenText(spokenText: String): String? {
+        return matchChannel(spokenText)
+    }
+
+    fun createRecognizerIntent(): Intent {
+        return Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "请说出频道名称")
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
+        }
+    }
+
     fun startListening() {
+        if (useVosk && voskManager.isModelReady()) {
+            voskManager.startListening(object : VoskVoiceManager.VoskCallback {
+                override fun onListeningStart() {
+                    callback.onListeningStart()
+                }
+
+                override fun onResult(text: String) {
+                    val matchedChannel = matchChannel(text)
+                    callback.onResult(matchedChannel)
+                }
+
+                override fun onError(error: String) {
+                    callback.onError(error)
+                }
+            })
+            return
+        }
+
+        if (!SpeechRecognizer.isRecognitionAvailable(context) && discoveredService == null) {
+            Log.e(TAG, "该设备不支持语音识别服务")
+            callback.onError("该设备不支持语音识别服务")
+            return
+        }
+
         if (speechRecognizer == null) {
             init()
         }
 
+        if (speechRecognizer == null) {
+            Log.e(TAG, "语音识别器初始化失败，无法启动")
+            callback.onError("语音识别不可用，请检查设备是否支持")
+            return
+        }
+
         try {
+            speechRecognizer?.cancel()
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN")
@@ -177,20 +305,15 @@ class VoiceManager(
         }
     }
 
-    /**
-     * 停止语音监听
-     */
     fun stopListening() {
         try {
             speechRecognizer?.stopListening()
         } catch (e: Exception) {
             Log.e(TAG, "停止语音识别失败: ${e.message}")
         }
+        voskManager.stopListening()
     }
 
-    /**
-     * 销毁语音识别器，释放资源
-     */
     fun destroy() {
         try {
             speechRecognizer?.stopListening()
@@ -200,5 +323,6 @@ class VoiceManager(
         }
         speechRecognizer = null
         channelKeywords = emptyMap()
+        voskManager.destroy()
     }
 }

@@ -1,16 +1,21 @@
 package com.elderly.tvassistant
 
 import android.app.Application
+import android.content.Context
+import com.elderly.tvassistant.utils.FontSizeHelper
+import com.elderly.tvassistant.utils.SharedPrefsHelper
 
-/**
- * 应用全局Application类
- * 用于全局初始化操作
- */
 class ElderlyTVApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
         instance = this
+    }
+
+    override fun attachBaseContext(base: Context) {
+        val prefsHelper = SharedPrefsHelper(base)
+        val contextWrapper = FontSizeHelper.wrapContext(base, prefsHelper.fontSize)
+        super.attachBaseContext(contextWrapper)
     }
 
     companion object {

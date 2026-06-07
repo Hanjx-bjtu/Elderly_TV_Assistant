@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
+import com.elderly.tvassistant.BaseActivity
 import androidx.lifecycle.lifecycleScope
 import com.elderly.tvassistant.database.AppDatabase
 import com.elderly.tvassistant.utils.ChannelDataLoader
@@ -23,7 +23,7 @@ import kotlin.jvm.java
  * 2. 初始化本地数据库（首次启动时加载预设频道数据）
  * 3. 判断是否首次启动，决定跳转引导页或主页
  */
-class SplashActivity : AppCompatActivity() {
+class SplashActivity : BaseActivity() {
 
     companion object {
         private const val TAG = "SplashActivity"

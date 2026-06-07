@@ -2,13 +2,13 @@ package com.elderly.tvassistant
 
 import android.os.Bundle
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import com.elderly.tvassistant.BaseActivity
 
 /**
  * 关于页面Activity
  * 显示APP版本信息、适老化设计理念、帮助联系方式
  */
-class AboutActivity : AppCompatActivity() {
+class AboutActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

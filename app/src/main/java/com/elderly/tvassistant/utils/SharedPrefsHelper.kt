@@ -30,6 +30,9 @@ class SharedPrefsHelper(context: Context) {
 
         // 默认频道
         private const val KEY_DEFAULT_CHANNEL = "default_channel"
+
+        // 自动播放
+        private const val KEY_AUTO_PLAY = "auto_play"
     }
 
     private val prefs: SharedPreferences =
@@ -95,5 +98,16 @@ class SharedPrefsHelper(context: Context) {
     /** 设置默认频道ID */
     fun setDefaultChannelId(channelId: Int) {
         prefs.edit().putInt(KEY_DEFAULT_CHANNEL, channelId).apply()
+    }
+
+    // ==================== 自动播放 ====================
+
+    /** 启动时是否自动播放 */
+    val isAutoPlayEnabled: Boolean
+        get() = prefs.getBoolean(KEY_AUTO_PLAY, true)
+
+    /** 设置自动播放开关 */
+    fun setAutoPlayEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_AUTO_PLAY, enabled).apply()
     }
 }
