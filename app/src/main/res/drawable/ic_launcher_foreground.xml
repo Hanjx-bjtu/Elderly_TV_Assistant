@@ -5,27 +5,102 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- 电视外框（粗线条，大圆角） -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M20,25 L88,25 L88,80 L20,80 Z"
-        android:strokeWidth="4"
-        android:strokeColor="#333333"/>
+    <!--
+        自适应图标安全区说明：
+        图标中心在 (54, 54)，半径 36dp 以内为安全区（不会被系统裁切）
+        所有核心元素均集中在安全区内
+    -->
 
-    <!-- 电视屏幕区域 -->
+    <!-- 1. 电视机外壳 (蓝色 #3D5AFE) -->
     <path
-        android:fillColor="#E8F4FD"
-        android:pathData="M25,30 L83,30 L83,75 L25,75 Z"/>
+        android:fillColor="#3D5AFE"
+        android:pathData="
+            M28,40
+            L80,40
+            Q84,40 84,44
+            L84,72
+            Q84,76 80,76
+            L28,76
+            Q24,76 24,72
+            L24,44
+            Q24,40 28,40 Z" />
 
-    <!-- 简化的"电视"图标（内部播放符号） -->
+    <!-- 电视天线 -->
     <path
-        android:fillColor="#FF7A00"
-        android:pathData="M45,45 L60,55 L45,65 Z"/>
+        android:strokeColor="#3D5AFE"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M42,40 L38,22" />
+    <path
+        android:strokeColor="#3D5AFE"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M62,40 L70,22" />
 
-    <!-- 适老标识（简化的"长辈"友好符号，圆角心形） -->
+    <!-- 2. 电视机屏幕 (纯黑 #000000) -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M80,20 C80,15 75,10 70,10 C65,10 60,15 60,20 C60,25 70,30 80,20 Z"
+        android:fillColor="#000000"
+        android:pathData="
+            M30,46
+            L78,46
+            L78,70
+            L30,70 Z" />
+
+    <!-- 3. 电视机底座 (深蓝 #1A237E) -->
+    <path
+        android:fillColor="#1A237E"
+        android:pathData="
+            M44,76
+            L64,76
+            L66,80
+            L42,80 Z" />
+
+    <!-- 4. 播放三角形按钮 (暖黄 #FFD966) - 视频播放核心 -->
+    <path
+        android:fillColor="#FFD966"
+        android:pathData="
+            M46,52
+            L46,64
+            L56,58 Z" />
+
+    <!-- 5. 语音声波纹 (蓝色 #3D5AFE) - 语音交互核心 -->
+    <!-- 第一层波纹 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#3D5AFE"
         android:strokeWidth="2"
-        android:strokeColor="#FF7A00"/>
+        android:strokeLineCap="round"
+        android:pathData="M64,56 Q68,58 64,60" />
+    <!-- 第二层波纹 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#3D5AFE"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M68,53 Q74,58 68,63" />
+    <!-- 第三层波纹 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#3D5AFE"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M72,50 Q80,58 72,66" />
+
+    <!-- 6. 收藏星标 (暖黄 #FFD966) - 右下角点缀 -->
+    <path
+        android:fillColor="#FFD966"
+        android:pathData="
+            M80,70
+            L81.5,73.5
+            L85.5,73.8
+            L82.5,76.5
+            L83.3,80.5
+            L80,78.5
+            L76.7,80.5
+            L77.5,76.5
+            L74.5,73.8
+            L78.5,73.5 Z" />
+
 </vector>

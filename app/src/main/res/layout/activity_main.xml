@@ -49,23 +49,23 @@
             <!-- 语音按钮 -->
             <ImageButton
                 android:id="@+id/btn_voice"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
                 android:src="@drawable/ic_mic"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="语音换台"
                 android:scaleType="centerInside"
-                android:padding="12dp" />
+                android:padding="0dp" />
 
-            <Space
-                android:layout_width="24dp"
-                android:layout_height="0dp" />
+<!--            <Space-->
+<!--                android:layout_width="24dp"-->
+<!--                android:layout_height="0dp" />-->
 
             <!-- 定时按钮 -->
             <ImageButton
                 android:id="@+id/btn_timer"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
                 android:src="@drawable/ic_timer"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="定时关闭"
@@ -79,8 +79,8 @@
             <!-- 收藏按钮 -->
             <ImageButton
                 android:id="@+id/btn_favorite"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
                 android:src="@drawable/star_selector"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="收藏"
@@ -94,8 +94,8 @@
             <!-- 菜单按钮 -->
             <ImageButton
                 android:id="@+id/btn_menu"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
                 android:src="@drawable/ic_menu"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="菜单"
@@ -109,8 +109,8 @@
             <!-- 设置按钮 -->
             <ImageButton
                 android:id="@+id/btn_settings"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
                 android:src="@drawable/ic_settings"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="设置"
@@ -119,5 +119,86 @@
 
         </LinearLayout>
     </LinearLayout>
+
+    <!-- 语音识别提示浮层 -->
+    <FrameLayout
+        android:id="@+id/voice_prompt_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_voice_overlay"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- 脉冲外环 -->
+            <View
+                android:id="@+id/voice_pulse_ring"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:background="@drawable/bg_voice_pulse_ring"
+                android:layout_gravity="center" />
+
+            <!-- 麦克风图标（居中覆盖在脉冲环上） -->
+            <ImageView
+                android:id="@+id/voice_prompt_mic"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/ic_mic"
+                android:background="@drawable/bg_voice_prompt_circle"
+                android:padding="24dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="-140dp"
+                android:contentDescription="@string/voice_listening" />
+
+            <!-- "请说"导引文字 -->
+            <TextView
+                android:id="@+id/voice_prompt_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/voice_prompt_say"
+                android:textColor="@color/white"
+                android:textSize="36sp"
+                android:textStyle="bold"
+                android:shadowColor="#000000"
+                android:shadowRadius="4" />
+
+            <!-- 副标题 -->
+            <TextView
+                android:id="@+id/voice_prompt_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/voice_prompt_hint"
+                android:textColor="@color/colorTextSecondary"
+                android:textSize="20sp"
+                android:shadowColor="#000000"
+                android:shadowRadius="2" />
+
+            <!-- 取消按钮 -->
+            <TextView
+                android:id="@+id/voice_prompt_cancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:paddingHorizontal="32dp"
+                android:paddingVertical="12dp"
+                android:text="@string/voice_prompt_cancel"
+                android:textColor="@color/colorTextSecondary"
+                android:textSize="18sp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+    </FrameLayout>
 
 </com.elderly.tvassistant.widget.GestureRelativeLayout>

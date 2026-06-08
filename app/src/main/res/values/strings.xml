@@ -4,6 +4,11 @@
     <string name="action_about">关于</string>
     <string name="channel_current">当前频道</string>
     <string name="voice_hint">请说出频道名称</string>
+    <string name="voice_listening">正在聆听</string>
+    <string name="voice_prompt_say">请说</string>
+    <string name="voice_prompt_hint">说出频道名称即可换台</string>
+    <string name="voice_prompt_cancel">取消</string>
+    <string name="voice_prompt_recognizing">识别中…</string>
     <string name="timer_title">定时关闭</string>
     <string name="exit_confirm">确定要退出长辈电视助手吗？</string>
     <string name="exit_title">退出</string>

@@ -12,8 +12,10 @@ import android.os.Vibrator
 import android.speech.RecognizerIntent
 import android.util.Log
 import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -59,6 +61,14 @@ class MainActivity : BaseActivity() {
     private lateinit var settingsBtn: ImageButton
     private lateinit var gestureLayout: GestureRelativeLayout
 
+    // 语音识别提示浮层组件
+    private lateinit var voicePromptOverlay: View
+    private lateinit var voicePromptMic: ImageView
+    private lateinit var voicePulseRing: View
+    private lateinit var voicePromptTitle: TextView
+    private lateinit var voicePromptSubtitle: TextView
+    private lateinit var voicePromptCancel: TextView
+
     // 管理器
     private lateinit var playerManager: PlayerManager
     private lateinit var voiceManager: VoiceManager
@@ -99,6 +109,7 @@ class MainActivity : BaseActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             voiceBtn.isSelected = false
+            hideVoicePrompt()
             if (result.resultCode == RESULT_OK) {
                 val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
                 val spokenText = matches?.firstOrNull() ?: ""
@@ -134,6 +145,18 @@ class MainActivity : BaseActivity() {
         menuBtn = findViewById(R.id.btn_menu)
         settingsBtn = findViewById(R.id.btn_settings)
         gestureLayout = findViewById(R.id.gesture_layout)
+
+        voicePromptOverlay = findViewById(R.id.voice_prompt_overlay)
+        voicePromptMic = findViewById(R.id.voice_prompt_mic)
+        voicePulseRing = findViewById(R.id.voice_pulse_ring)
+        voicePromptTitle = findViewById(R.id.voice_prompt_title)
+        voicePromptSubtitle = findViewById(R.id.voice_prompt_subtitle)
+        voicePromptCancel = findViewById(R.id.voice_prompt_cancel)
+
+        voicePromptCancel.setOnClickListener {
+            hideVoicePrompt()
+            voiceManager.stopListening()
+        }
     }
 
     /**
@@ -184,13 +207,16 @@ class MainActivity : BaseActivity() {
             override fun onListeningStart() {
                 runOnUiThread {
                     voiceBtn.isSelected = true
-                    Toast.makeText(this@MainActivity, "正在听，请说频道名称...", Toast.LENGTH_SHORT).show()
+                    voiceViewModel.setListening(true)
+                    showVoicePrompt()
                 }
             }
 
             override fun onResult(channelName: String?) {
                 runOnUiThread {
                     voiceBtn.isSelected = false
+                    voiceViewModel.setListening(false)
+                    hideVoicePrompt()
                     voiceViewModel.setVoiceResult(channelName)
                 }
             }
@@ -198,8 +224,12 @@ class MainActivity : BaseActivity() {
             override fun onError(error: String) {
                 runOnUiThread {
                     voiceBtn.isSelected = false
+                    voiceViewModel.setListening(false)
+                    hideVoicePrompt()
                     if (error.contains("不支持") || error.contains("不可用")) {
                         Toast.makeText(this@MainActivity, error, Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -389,6 +419,30 @@ class MainActivity : BaseActivity() {
     }
 
     /**
+     * 显示语音识别提示浮层
+     */
+    private fun showVoicePrompt() {
+        if (!::voicePromptOverlay.isInitialized) return
+        voicePromptTitle.text = getString(R.string.voice_prompt_say)
+        voicePromptSubtitle.text = getString(R.string.voice_prompt_hint)
+        voicePromptOverlay.visibility = View.VISIBLE
+
+        val pulseAnimation = AnimationUtils.loadAnimation(this, R.anim.voice_pulse)
+        voicePromptMic.startAnimation(pulseAnimation)
+        voicePulseRing.startAnimation(pulseAnimation)
+    }
+
+    /**
+     * 隐藏语音识别提示浮层
+     */
+    private fun hideVoicePrompt() {
+        if (!::voicePromptOverlay.isInitialized) return
+        voicePromptMic.clearAnimation()
+        voicePulseRing.clearAnimation()
+        voicePromptOverlay.visibility = View.GONE
+    }
+
+    /**
      * 启动语音识别
      */
     private fun startVoiceRecognition() {
@@ -429,11 +483,13 @@ class MainActivity : BaseActivity() {
 
         if (voiceManager.isAvailable()) {
             Log.d(TAG, "语音识别可用，开始监听")
+            showVoicePrompt()
             voiceManager.startListening()
         } else if (voiceManager.isVoskModelDownloaded()) {
             Log.d(TAG, "Vosk模型已下载，尝试加载")
             voiceManager.init()
             if (voiceManager.isAvailable()) {
+                showVoicePrompt()
                 voiceManager.startListening()
             } else {
                 Toast.makeText(this, "语音模型加载失败，请重启应用", Toast.LENGTH_SHORT).show()
@@ -443,10 +499,12 @@ class MainActivity : BaseActivity() {
         } else if (voiceManager.isIntentRecognitionAvailable()) {
             Log.d(TAG, "使用Intent方式启动语音识别")
             voiceBtn.isSelected = true
+            showVoicePrompt()
             try {
                 speechRecognizerLauncher.launch(voiceManager.createRecognizerIntent())
             } catch (e: Exception) {
                 voiceBtn.isSelected = false
+                hideVoicePrompt()
                 Toast.makeText(this, "无法启动语音识别", Toast.LENGTH_SHORT).show()
             }
         } else {
@@ -692,8 +750,8 @@ class MainActivity : BaseActivity() {
 
     override fun onPause() {
         super.onPause()
-        // 页面暂停时停止语音监听
         voiceManager.stopListening()
+        hideVoicePrompt()
     }
 
     override fun onDestroy() {

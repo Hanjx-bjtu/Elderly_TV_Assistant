@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -27,9 +29,14 @@ class VoiceManager(
     private var discoveredService: ComponentName? = null
     private var useVosk = false
     private val voskManager: VoskVoiceManager = VoskVoiceManager(context)
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var readyForSpeechTimeout: Runnable? = null
+    private var isReadyForSpeechFired = false
 
     companion object {
         private const val TAG = "VoiceManager"
+        private const val READY_FOR_SPEECH_TIMEOUT_MS = 3000L
+        private val FAKE_SERVICE_KEYWORDS = listOf("fake", "stub", "dummy", "noop")
         private val KNOWN_SERVICES = listOf(
             ComponentName(
                 "com.google.android.googlequicksearchbox",
@@ -54,6 +61,18 @@ class VoiceManager(
         )
     }
 
+    private fun isFakeService(component: ComponentName): Boolean {
+        val className = component.className.lowercase()
+        val packageName = component.packageName.lowercase()
+        for (keyword in FAKE_SERVICE_KEYWORDS) {
+            if (className.contains(keyword) || packageName.contains(keyword)) {
+                Log.w(TAG, "发现假语音识别服务: $component (匹配关键词: $keyword)")
+                return true
+            }
+        }
+        return false
+    }
+
     private fun findRecognitionService(): ComponentName? {
         try {
             val intent = Intent("android.speech.RecognitionService")
@@ -62,7 +81,10 @@ class VoiceManager(
                 val serviceInfo = resolveInfo.serviceInfo
                 val component = ComponentName(serviceInfo.packageName, serviceInfo.name)
                 Log.d(TAG, "发现语音识别服务(查询): $component")
-                return component
+                if (!isFakeService(component)) {
+                    return component
+                }
+                Log.d(TAG, "跳过假语音识别服务: $component")
             }
         } catch (e: Exception) {
             Log.w(TAG, "查询语音识别服务失败: ${e.message}")
@@ -72,7 +94,10 @@ class VoiceManager(
             try {
                 context.packageManager.getServiceInfo(service, 0)
                 Log.d(TAG, "发现语音识别服务(已知): $service")
-                return service
+                if (!isFakeService(service)) {
+                    return service
+                }
+                Log.d(TAG, "跳过假语音识别服务(已知): $service")
             } catch (_: Exception) {
             }
         }
@@ -82,6 +107,22 @@ class VoiceManager(
 
     fun init() {
         Log.d(TAG, "init: 开始初始化，isRecognitionAvailable=${SpeechRecognizer.isRecognitionAvailable(context)}")
+
+        val realService = findRecognitionService()
+
+        if (realService != null) {
+            try {
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context, realService).apply {
+                    setRecognitionListener(createRecognitionListener())
+                }
+                discoveredService = realService
+                useVosk = false
+                Log.d(TAG, "init: 使用发现的语音识别服务: $realService")
+                return
+            } catch (e: Exception) {
+                Log.e(TAG, "语音识别器创建失败: ${e.message}")
+            }
+        }
 
         if (SpeechRecognizer.isRecognitionAvailable(context)) {
             try {
@@ -93,20 +134,6 @@ class VoiceManager(
                 return
             } catch (e: Exception) {
                 Log.e(TAG, "默认语音识别器创建失败: ${e.message}")
-            }
-        }
-
-        discoveredService = findRecognitionService()
-        if (discoveredService != null) {
-            try {
-                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context, discoveredService).apply {
-                    setRecognitionListener(createRecognitionListener())
-                }
-                Log.d(TAG, "init: 使用发现的语音识别服务: $discoveredService")
-                useVosk = false
-                return
-            } catch (e: Exception) {
-                Log.e(TAG, "语音识别器创建失败: ${e.message}")
             }
         }
 
@@ -127,6 +154,8 @@ class VoiceManager(
         return object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
                 Log.d(TAG, "准备就绪，等待语音输入")
+                isReadyForSpeechFired = true
+                cancelReadyForSpeechTimeout()
                 callback.onListeningStart()
             }
 
@@ -202,9 +231,10 @@ class VoiceManager(
 
     fun isAvailable(): Boolean {
         val systemAvailable = SpeechRecognizer.isRecognitionAvailable(context)
-        val hasDiscoveredService = discoveredService != null || findRecognitionService() != null
+        val realService = findRecognitionService()
+        val hasDiscoveredService = realService != null
         val voskReady = voskManager.isModelReady()
-        val result = systemAvailable || hasDiscoveredService || voskReady
+        val result = (systemAvailable && realService != null) || hasDiscoveredService || voskReady
         Log.d(TAG, "isAvailable: system=$systemAvailable, discovered=$hasDiscoveredService, vosk=$voskReady, result=$result")
         return result
     }
@@ -254,6 +284,25 @@ class VoiceManager(
         }
     }
 
+    private fun cancelReadyForSpeechTimeout() {
+        readyForSpeechTimeout?.let {
+            mainHandler.removeCallbacks(it)
+            readyForSpeechTimeout = null
+        }
+    }
+
+    private fun scheduleReadyForSpeechTimeout() {
+        cancelReadyForSpeechTimeout()
+        isReadyForSpeechFired = false
+        readyForSpeechTimeout = Runnable {
+            if (!isReadyForSpeechFired) {
+                Log.w(TAG, "onReadyForSpeech超时未触发，语音识别服务可能不可用")
+                callback.onError("语音识别服务未响应，请尝试其他方式")
+            }
+        }
+        mainHandler.postDelayed(readyForSpeechTimeout!!, READY_FOR_SPEECH_TIMEOUT_MS)
+    }
+
     fun startListening() {
         if (useVosk && voskManager.isModelReady()) {
             voskManager.startListening(object : VoskVoiceManager.VoskCallback {
@@ -299,6 +348,7 @@ class VoiceManager(
                 putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
             }
             speechRecognizer?.startListening(intent)
+            scheduleReadyForSpeechTimeout()
         } catch (e: Exception) {
             Log.e(TAG, "启动语音识别失败: ${e.message}")
             callback.onError("无法启动语音识别")
@@ -306,6 +356,7 @@ class VoiceManager(
     }
 
     fun stopListening() {
+        cancelReadyForSpeechTimeout()
         try {
             speechRecognizer?.stopListening()
         } catch (e: Exception) {
@@ -315,6 +366,7 @@ class VoiceManager(
     }
 
     fun destroy() {
+        cancelReadyForSpeechTimeout()
         try {
             speechRecognizer?.stopListening()
             speechRecognizer?.destroy()
