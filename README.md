@@ -45,7 +45,7 @@
 |:---:|:---:|:---:|
 | Channels | Settings | About |
 
-## 🏗️ 技术架构
+## 技术架构
 
 ### 整体架构
 ```
@@ -106,7 +106,7 @@ app/
 | 图片加载 | Glide |
 | UI 组件 | AndroidX, Material Design, ViewPager2, RecyclerView |
 
-## 🚀 构建与运行
+## 构建与运行
 
 ### 环境要求
 - Android Studio Hedgehog 或更高版本
