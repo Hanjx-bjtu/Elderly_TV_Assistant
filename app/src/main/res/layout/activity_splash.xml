@@ -10,7 +10,7 @@
         android:id="@+id/iv_splash_logo"
         android:layout_width="120dp"
         android:layout_height="120dp"
-        android:src="@drawable/ic_tv"
+        android:src="@mipmap/ic_launcher"
         android:contentDescription="应用图标"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/tv_splash_title"

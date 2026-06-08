@@ -30,4 +30,5 @@
 
     <color name="colorDotSelected">#FFFFFF</color>
     <color name="colorDotNormal">#666666</color>
+    <color name="AnotherBlue">#32C8FF</color>
 </resources>

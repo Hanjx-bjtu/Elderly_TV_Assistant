@@ -1,46 +1,155 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/colorBackground"
-    android:padding="32dp"
-    android:gravity="center_horizontal">
+    android:fillViewport="true">
 
-    <ImageView
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:src="@drawable/ic_tv"
-        android:contentDescription="应用图标"
-        android:layout_marginTop="32dp" />
-
-    <TextView
-        android:id="@+id/tv_version"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="版本 1.0"
-        android:textColor="@color/colorTextSecondary"
-        android:textSize="18sp"
-        android:layout_marginTop="16dp" />
-
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="长辈电视助手"
-        android:textColor="@color/colorTextPrimary"
-        android:textSize="26sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginTop="32dp" />
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:gravity="center_horizontal">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="专为老年用户设计的电视直播观看助手。\n\n核心特点：\n· 大字体、高对比度界面\n· 左右点击快速换台\n· 语音识别换台\n· 定时自动关闭\n· 语音播报频道名称"
-        android:textColor="@color/colorTextSecondary"
-        android:textSize="20sp"
-        android:lineSpacingMultiplier="1.5"
-        android:layout_marginTop="24dp" />
+        <ImageView
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:src="@mipmap/ic_launcher"
+            android:contentDescription="应用图标"
+            android:layout_marginTop="24dp" />
 
-</LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="长辈电视助手"
+            android:textColor="@color/colorTextPrimary"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:id="@+id/tv_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/software_version"
+            android:textColor="@color/colorTextSecondary"
+            android:textSize="18sp"
+            android:layout_marginTop="8dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#32C8FFFF"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="应用简介"
+            android:textColor="@color/colorAccent"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="长辈电视助手是一款专为老年用户设计的电视直播观看应用。我们关注老年群体的实际需求，以简洁直观的操作方式，让长辈轻松享受电视直播节目，不再为复杂的操作而烦恼。"
+            android:textColor="@color/colorTextSecondary"
+            android:textSize="20sp"
+            android:lineSpacingMultiplier="1.5"
+            android:layout_marginTop="12dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#33FFFFFF"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="核心特点"
+            android:textColor="@color/colorAccent"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="· 大字体、高对比度界面\n  全局大字号显示，深色背景搭配亮色文字，确保长辈看得清、看得舒适\n\n· 左右点击快速换台\n  点击屏幕左侧切上一台，右侧切下一台，无需寻找小按钮\n\n· 语音播报频道名称\n  切换频道时自动播报当前频道，确认换台结果\n\n· 定时自动关闭\n  支持15/30/60/90分钟定时关闭，防止长辈忘记关电视\n\n· 收藏常用频道\n  一键收藏常看频道，快速找到想看的节目\n\n· 震动反馈\n  操作时提供震动提示，增强交互确认感"
+            android:textColor="@color/colorTextSecondary"
+            android:textSize="20sp"
+            android:lineSpacingMultiplier="1.4"
+            android:layout_marginTop="12dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#33FFFFFF"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="适老化设计"
+            android:textColor="@color/colorAccent"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="· 字体大小可调节（普通/大/超大）\n· 按钮尺寸加大，避免误触\n· 操作步骤精简，核心功能一步直达\n· 首次使用提供图文引导，快速上手\n· 启动即播放，无需额外操作"
+            android:textColor="@color/colorTextSecondary"
+            android:textSize="20sp"
+            android:lineSpacingMultiplier="1.4"
+            android:layout_marginTop="12dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#33FFFFFF"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="帮助与反馈"
+            android:textColor="@color/colorAccent"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="如遇使用问题或有改进建议，请联系：\n\n邮箱：\n23281106@bjtu.edu.cn\n23281120@bjtu.edu.cn"
+            android:textColor="@color/colorTextSecondary"
+            android:textSize="20sp"
+            android:lineSpacingMultiplier="1.4"
+            android:layout_marginTop="12dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="“用心陪伴，让看电视更简单。”"
+            android:textColor="@color/AnotherBlue"
+            android:textSize="20sp"
+            android:textStyle="italic"
+            android:gravity="center"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="32dp" />
+
+    </LinearLayout>
+
+</ScrollView>

@@ -41,4 +41,5 @@
     <string name="settings_group_playback">播放</string>
     <string name="settings_group_interaction">交互</string>
     <string name="settings_group_other">其他</string>
+    <string name="software_version">版本：1.0.0</string>
 </resources>
