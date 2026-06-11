@@ -36,6 +36,7 @@ class SettingsActivity : BaseActivity() {
         setupAutoPlaySwitch()
         setupDefaultChannel()
         setupVibrateSwitch()
+        setupNetworkReminderSwitch()
         setupAbout()
     }
 
@@ -74,6 +75,14 @@ class SettingsActivity : BaseActivity() {
         vibrateSwitch.isChecked = prefsHelper.isVibrateEnabled
         vibrateSwitch.setOnCheckedChangeListener { _, isChecked ->
             prefsHelper.setVibrateEnabled(isChecked)
+        }
+    }
+
+    private fun setupNetworkReminderSwitch() {
+        val networkSwitch = findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.switch_network_reminder)
+        networkSwitch.isChecked = prefsHelper.isNetworkReminderEnabled
+        networkSwitch.setOnCheckedChangeListener { _, isChecked ->
+            prefsHelper.setNetworkReminderEnabled(isChecked)
         }
     }
 

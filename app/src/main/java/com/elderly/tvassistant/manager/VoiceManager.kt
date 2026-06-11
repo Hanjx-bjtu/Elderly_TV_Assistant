@@ -3,7 +3,6 @@ package com.elderly.tvassistant.manager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -27,8 +26,8 @@ class VoiceManager(
     private var speechRecognizer: SpeechRecognizer? = null
     private var channelKeywords: Map<String, String> = emptyMap()
     private var discoveredService: ComponentName? = null
-    private var useVosk = false
-    private val voskManager: VoskVoiceManager = VoskVoiceManager(context)
+    private var useXfyun = false
+    private val xfyunManager: XfyunVoiceManager = XfyunVoiceManager(context)
     private val mainHandler = Handler(Looper.getMainLooper())
     private var readyForSpeechTimeout: Runnable? = null
     private var isReadyForSpeechFired = false
@@ -116,7 +115,7 @@ class VoiceManager(
                     setRecognitionListener(createRecognitionListener())
                 }
                 discoveredService = realService
-                useVosk = false
+                useXfyun = false
                 Log.d(TAG, "init: 使用发现的语音识别服务: $realService")
                 return
             } catch (e: Exception) {
@@ -124,26 +123,22 @@ class VoiceManager(
             }
         }
 
+        if (xfyunManager.isAvailable()) {
+            useXfyun = true
+            Log.d(TAG, "init: 未发现真实系统识别服务，使用科大讯飞语音识别")
+            return
+        }
+
         if (SpeechRecognizer.isRecognitionAvailable(context)) {
             try {
                 speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
                     setRecognitionListener(createRecognitionListener())
                 }
-                useVosk = false
-                Log.d(TAG, "init: 使用系统默认语音识别服务")
+                useXfyun = false
+                Log.d(TAG, "init: 科大讯飞不可用，尝试系统默认语音识别服务（可能不可靠）")
                 return
             } catch (e: Exception) {
                 Log.e(TAG, "默认语音识别器创建失败: ${e.message}")
-            }
-        }
-
-        Log.d(TAG, "init: 系统语音识别不可用，检查Vosk模型，isModelDownloaded=${voskManager.isModelDownloaded()}")
-        if (voskManager.isModelDownloaded()) {
-            voskManager.loadModel()
-            if (voskManager.isModelReady()) {
-                useVosk = true
-                Log.d(TAG, "init: 使用Vosk离线语音识别引擎")
-                return
             }
         }
 
@@ -230,41 +225,15 @@ class VoiceManager(
     }
 
     fun isAvailable(): Boolean {
-        val systemAvailable = SpeechRecognizer.isRecognitionAvailable(context)
         val realService = findRecognitionService()
-        val hasDiscoveredService = realService != null
-        val voskReady = voskManager.isModelReady()
-        val result = (systemAvailable && realService != null) || hasDiscoveredService || voskReady
-        Log.d(TAG, "isAvailable: system=$systemAvailable, discovered=$hasDiscoveredService, vosk=$voskReady, result=$result")
+        val hasRealSystemService = realService != null
+        val xfyunReady = xfyunManager.isAvailable()
+        val result = hasRealSystemService || xfyunReady
+        Log.d(TAG, "isAvailable: hasRealSystem=$hasRealSystemService, xfyun=$xfyunReady, result=$result")
         return result
     }
 
-    fun isVoskAvailable(): Boolean = voskManager.isModelReady()
-
-    fun isVoskModelDownloaded(): Boolean = voskManager.isModelDownloaded()
-
-    fun isVoskDownloading(): Boolean = voskManager.isDownloading()
-
-    fun downloadVoskModel(downloadCallback: VoskVoiceManager.DownloadCallback) {
-        voskManager.downloadModel(object : VoskVoiceManager.DownloadCallback {
-            override fun onProgress(progress: Int) {
-                downloadCallback.onProgress(progress)
-            }
-
-            override fun onComplete() {
-                useVosk = true
-                downloadCallback.onComplete()
-            }
-
-            override fun onError(error: String) {
-                downloadCallback.onError(error)
-            }
-        })
-    }
-
-    fun cancelVoskDownload() {
-        voskManager.cancelDownload()
-    }
+    fun isXfyunAvailable(): Boolean = xfyunManager.isAvailable()
 
     fun isIntentRecognitionAvailable(): Boolean {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -304,8 +273,8 @@ class VoiceManager(
     }
 
     fun startListening() {
-        if (useVosk && voskManager.isModelReady()) {
-            voskManager.startListening(object : VoskVoiceManager.VoskCallback {
+        if (useXfyun && xfyunManager.isAvailable()) {
+            xfyunManager.startListening(object : XfyunVoiceManager.XfyunCallback {
                 override fun onListeningStart() {
                     callback.onListeningStart()
                 }
@@ -333,6 +302,24 @@ class VoiceManager(
         }
 
         if (speechRecognizer == null) {
+            if (xfyunManager.isAvailable()) {
+                useXfyun = true
+                xfyunManager.startListening(object : XfyunVoiceManager.XfyunCallback {
+                    override fun onListeningStart() {
+                        callback.onListeningStart()
+                    }
+
+                    override fun onResult(text: String) {
+                        val matchedChannel = matchChannel(text)
+                        callback.onResult(matchedChannel)
+                    }
+
+                    override fun onError(error: String) {
+                        callback.onError(error)
+                    }
+                })
+                return
+            }
             Log.e(TAG, "语音识别器初始化失败，无法启动")
             callback.onError("语音识别不可用，请检查设备是否支持")
             return
@@ -362,7 +349,7 @@ class VoiceManager(
         } catch (e: Exception) {
             Log.e(TAG, "停止语音识别失败: ${e.message}")
         }
-        voskManager.stopListening()
+        xfyunManager.stopListening()
     }
 
     fun destroy() {
@@ -375,6 +362,6 @@ class VoiceManager(
         }
         speechRecognizer = null
         channelKeywords = emptyMap()
-        voskManager.destroy()
+        xfyunManager.destroy()
     }
 }

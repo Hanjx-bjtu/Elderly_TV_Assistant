@@ -33,6 +33,9 @@ class SharedPrefsHelper(context: Context) {
 
         // 自动播放
         private const val KEY_AUTO_PLAY = "auto_play"
+
+        // 网络提醒
+        private const val KEY_NETWORK_REMINDER_ENABLED = "network_reminder_enabled"
     }
 
     private val prefs: SharedPreferences =
@@ -109,5 +112,16 @@ class SharedPrefsHelper(context: Context) {
     /** 设置自动播放开关 */
     fun setAutoPlayEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_AUTO_PLAY, enabled).apply()
+    }
+
+    // ==================== 网络提醒 ====================
+
+    /** 网络提醒是否开启 */
+    val isNetworkReminderEnabled: Boolean
+        get() = prefs.getBoolean(KEY_NETWORK_REMINDER_ENABLED, true)
+
+    /** 设置网络提醒开关 */
+    fun setNetworkReminderEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_NETWORK_REMINDER_ENABLED, enabled).apply()
     }
 }

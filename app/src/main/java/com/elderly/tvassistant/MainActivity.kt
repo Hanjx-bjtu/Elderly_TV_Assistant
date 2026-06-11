@@ -30,7 +30,8 @@ import com.elderly.tvassistant.manager.PlayerManager
 import com.elderly.tvassistant.manager.TTSManager
 import com.elderly.tvassistant.manager.TimerManager
 import com.elderly.tvassistant.manager.VoiceManager
-import com.elderly.tvassistant.manager.VoskVoiceManager
+import com.elderly.tvassistant.manager.NetworkManager
+
 import com.elderly.tvassistant.model.Channel
 import com.elderly.tvassistant.repository.ChannelRepository
 import com.elderly.tvassistant.repository.FavoriteRepository
@@ -74,6 +75,7 @@ class MainActivity : BaseActivity() {
     private lateinit var voiceManager: VoiceManager
     private lateinit var ttsManager: TTSManager
     private lateinit var timerManager: TimerManager
+    private lateinit var networkManager: NetworkManager
     private lateinit var prefsHelper: SharedPrefsHelper
     private lateinit var permissionHelper: PermissionHelper
 
@@ -91,6 +93,9 @@ class MainActivity : BaseActivity() {
 
     // 控制栏可见状态
     private var isControlBarVisible = true
+
+    // 网络提醒状态（防止重复弹窗）
+    private var hasShownMobileDataReminder = false
 
     // Intent方式语音识别启动器（SpeechRecognizer不可用时的回退方案）
     private lateinit var speechRecognizerLauncher: ActivityResultLauncher<Intent>
@@ -178,6 +183,22 @@ class MainActivity : BaseActivity() {
 
         // 定时管理器
         timerManager = TimerManager(this)
+
+        // 网络管理器
+        networkManager = NetworkManager(this)
+        networkManager.onNetworkChanged = { networkType ->
+            runOnUiThread {
+                if (networkType == NetworkManager.NetworkType.MOBILE
+                    && prefsHelper.isNetworkReminderEnabled
+                    && !hasShownMobileDataReminder
+                ) {
+                    hasShownMobileDataReminder = true
+                    showMobileDataReminderDialog()
+                } else if (networkType == NetworkManager.NetworkType.WIFI) {
+                    hasShownMobileDataReminder = false
+                }
+            }
+        }
 
         // 偏好设置
         prefsHelper = SharedPrefsHelper(this)
@@ -485,17 +506,10 @@ class MainActivity : BaseActivity() {
             Log.d(TAG, "语音识别可用，开始监听")
             showVoicePrompt()
             voiceManager.startListening()
-        } else if (voiceManager.isVoskModelDownloaded()) {
-            Log.d(TAG, "Vosk模型已下载，尝试加载")
-            voiceManager.init()
-            if (voiceManager.isAvailable()) {
-                showVoicePrompt()
-                voiceManager.startListening()
-            } else {
-                Toast.makeText(this, "语音模型加载失败，请重启应用", Toast.LENGTH_SHORT).show()
-            }
-        } else if (voiceManager.isVoskDownloading()) {
-            Toast.makeText(this, "语音模型正在下载中，请稍候...", Toast.LENGTH_SHORT).show()
+        } else if (voiceManager.isXfyunAvailable()) {
+            Log.d(TAG, "科大讯飞语音识别可用，开始监听")
+            showVoicePrompt()
+            voiceManager.startListening()
         } else if (voiceManager.isIntentRecognitionAvailable()) {
             Log.d(TAG, "使用Intent方式启动语音识别")
             voiceBtn.isSelected = true
@@ -508,73 +522,37 @@ class MainActivity : BaseActivity() {
                 Toast.makeText(this, "无法启动语音识别", Toast.LENGTH_SHORT).show()
             }
         } else {
-            Log.d(TAG, "无可用语音识别引擎，提示下载Vosk模型")
-            showVoskDownloadDialog()
+            Log.d(TAG, "无可用语音识别引擎")
+            showXfyunConfigDialog()
         }
     }
 
     /**
-     * 显示Vosk离线语音模型下载对话框
+     * 显示科大讯飞语音识别配置提示对话框
      */
-    private fun showVoskDownloadDialog() {
+    private fun showXfyunConfigDialog() {
         AlertDialog.Builder(this)
-            .setTitle("下载离线语音识别模型")
-            .setMessage("该设备未安装在线语音识别引擎，需要下载离线语音模型（约42MB）。\n\n" +
-                    "下载完成后即可在无网络环境下使用语音换台功能。")
-            .setPositiveButton("下载") { _, _ ->
-                startVoskModelDownload()
-            }
-            .setNegativeButton("取消", null)
+            .setTitle("语音识别不可用")
+            .setMessage("当前设备未安装系统语音识别引擎，且科大讯飞语音识别未配置。\n\n" +
+                    "请在XfyunVoiceManager中配置您的APPID、APIKey和APISecret后重试。\n\n" +
+                    "您也可以安装支持语音识别的输入法或应用（如讯飞输入法）。")
+            .setPositiveButton("确定", null)
             .show()
     }
 
-    private var voskDownloadDialog: AlertDialog? = null
-
-    private fun startVoskModelDownload() {
-        val progressDialog = AlertDialog.Builder(this)
-            .setTitle("下载语音模型")
-            .setMessage("正在下载... 0%")
-            .setNegativeButton("取消") { _, _ ->
-                voiceManager.cancelVoskDownload()
-                voskDownloadDialog = null
+    /**
+     * 显示移动数据流量提醒对话框
+     * 当检测到用户使用移动数据时，提醒可能产生流量费用
+     */
+    private fun showMobileDataReminderDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("流量提醒")
+            .setMessage("您当前正在使用移动数据网络，观看视频会消耗较多流量，可能产生额外费用。\n\n建议切换到WiFi网络后观看。")
+            .setPositiveButton("知道了") { dialog, _ ->
+                dialog.dismiss()
             }
             .setCancelable(false)
-            .create()
-        voskDownloadDialog = progressDialog
-        progressDialog.show()
-
-        voiceManager.downloadVoskModel(object : VoskVoiceManager.DownloadCallback {
-            override fun onProgress(progress: Int) {
-                runOnUiThread {
-                    if (progress < 0) {
-                        progressDialog.setMessage("正在解压模型...")
-                    } else {
-                        progressDialog.setMessage("正在下载... $progress%")
-                    }
-                }
-            }
-
-            override fun onComplete() {
-                runOnUiThread {
-                    voskDownloadDialog?.dismiss()
-                    voskDownloadDialog = null
-                    Toast.makeText(this@MainActivity, "语音模型下载完成，请点击语音按钮开始使用", Toast.LENGTH_LONG).show()
-                }
-            }
-
-            override fun onError(error: String) {
-                runOnUiThread {
-                    voskDownloadDialog?.dismiss()
-                    voskDownloadDialog = null
-                    AlertDialog.Builder(this@MainActivity)
-                        .setTitle("下载失败")
-                        .setMessage("语音模型下载失败：$error\n\n请检查网络连接后重试。")
-                        .setPositiveButton("重试") { _, _ -> startVoskModelDownload() }
-                        .setNegativeButton("取消", null)
-                        .show()
-                }
-            }
-        })
+            .show()
     }
 
     /**
@@ -746,12 +724,23 @@ class MainActivity : BaseActivity() {
                 executeSetTimer(pendingTimerMinutes)
             }
         }
+
+        // 注册网络监听并检查当前网络状态
+        networkManager.registerNetworkCallback()
+        if (networkManager.isMobileDataConnected()
+            && prefsHelper.isNetworkReminderEnabled
+            && !hasShownMobileDataReminder
+        ) {
+            hasShownMobileDataReminder = true
+            showMobileDataReminderDialog()
+        }
     }
 
     override fun onPause() {
         super.onPause()
         voiceManager.stopListening()
         hideVoicePrompt()
+        networkManager.unregisterNetworkCallback()
     }
 
     override fun onDestroy() {

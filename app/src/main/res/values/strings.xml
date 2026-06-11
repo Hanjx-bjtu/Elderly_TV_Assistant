@@ -40,6 +40,12 @@
     <string name="settings_group_display">显示</string>
     <string name="settings_group_playback">播放</string>
     <string name="settings_group_interaction">交互</string>
+    <string name="settings_group_network">网络</string>
+    <string name="settings_network_reminder">流量使用提醒</string>
+    <string name="settings_network_reminder_desc">使用移动数据时提醒您</string>
+    <string name="network_mobile_data_title">流量提醒</string>
+    <string name="network_mobile_data_message">您当前正在使用移动数据网络，观看视频会消耗较多流量，可能产生额外费用。\n\n建议切换到WiFi网络后观看。</string>
+    <string name="network_mobile_data_confirm">知道了</string>
     <string name="settings_group_other">其他</string>
     <string name="software_version">版本：1.0.0</string>
 </resources>
